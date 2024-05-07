@@ -12,6 +12,7 @@ let project = Project(
                 with: [
                     "CFBundleDisplayName": "Palette",
                     "UISupportedInterfaceOrientations": ["UIInterfaceOrientationPortrait"],
+                    "NSAppTransportSecurity": ["NSAllowsArbitraryLoads": true],
                     "UILaunchStoryboardName": "LaunchScreen.storyboard",
                     "UIAppFonts": [
                         "Pretendard-Black.otf",

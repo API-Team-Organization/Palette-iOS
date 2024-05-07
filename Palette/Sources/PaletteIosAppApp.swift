@@ -5,7 +5,7 @@ import FlowKit
 struct PaletteIosAppApp: App {
     var body: some Scene {
         WindowGroup {
-            FlowPresenter(rootView: OnBoardingView())
+            FlowPresenter(rootView: StartView())
                 .ignoresSafeArea()
         }
     }
