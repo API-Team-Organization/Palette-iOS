@@ -1,6 +1,5 @@
-
 //
-//  OnBoardingView.swift
+//  LastOnBoardingView.swift
 //  Palette
 //
 //  Created by 4rNe5 on 5/7/24.
@@ -9,7 +8,8 @@
 import SwiftUI
 import RiveRuntime
 
-struct OnBoardingView: View {
+struct LastOnBoardingView: View {
+    @Binding var isFirstLaunching: Bool
     
     let rivename: String
     let riveboardname: String
@@ -21,29 +21,37 @@ struct OnBoardingView: View {
         ZStack {
             Color(.white).ignoresSafeArea()
             VStack {
-                Spacer()
                 RiveViewRepresentable(viewModel: RiveViewModel(fileName: rivename, artboardName: riveboardname))
-                    .padding(.bottom, -22)
+                    .padding(.bottom, -40)
                 Text(Title)
                     .font(.custom("Pretendard-Bold", size: 27))
-                    .padding(.bottom, 3)
                     .foregroundStyle(Color.black)
+                    .fontWeight(.bold)
+                    .padding(.bottom, 3)
                 Text(DescFirst)
                     .font(.custom("Pretendard-Light", size: 19))
-                    .frame(alignment: .center)
                     .foregroundStyle(Color.black)
+                    .frame(alignment: .center)
                 Text(DescSecond)
                     .font(.custom("Pretendard-Light", size: 19))
-                    .frame(alignment: .center)
-                    .padding(.bottom, 170)
                     .foregroundStyle(Color.black)
+                    .frame(alignment: .center)
+                    .padding(.bottom, 65)
+                
+                Button {
+                   isFirstLaunching.toggle()
+                } label: {
+                    
+                  Text("시작하기")
+                    .fontWeight(.bold)
+                    .foregroundColor(.white)
+                    .frame(width: 330, height: 50)
+                    .background(Color.accentColor)
+                    .cornerRadius(12)
+                    
+                }
+                .padding(.bottom, 100)
             }
-            .padding(.bottom, 54)
         }
     }
-    
-}
-
-#Preview {
-    OnBoardingView(rivename: "load", riveboardname: "Simple_loader", Title:"\"어케 만들었냐?\"" , DescFirst: "나만의 홍보물,", DescSecond: "AI를 활용해 쉽게 만들어보세요!")
 }
