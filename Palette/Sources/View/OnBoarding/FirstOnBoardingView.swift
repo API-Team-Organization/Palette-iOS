@@ -23,27 +23,24 @@ struct OnBoardingView: View {
             VStack {
                 Spacer()
                 RiveViewRepresentable(viewModel: RiveViewModel(fileName: rivename, artboardName: riveboardname))
-                    .padding(.bottom, -22)
+                    .padding(.bottom, -50)
                 Text(Title)
                     .font(.custom("Pretendard-Bold", size: 27))
+                    .fontWeight(.bold)
                     .padding(.bottom, 3)
-                    .foregroundStyle(Color.black)
                 Text(DescFirst)
                     .font(.custom("Pretendard-Light", size: 19))
                     .frame(alignment: .center)
-                    .foregroundStyle(Color.black)
                 Text(DescSecond)
                     .font(.custom("Pretendard-Light", size: 19))
                     .frame(alignment: .center)
                     .padding(.bottom, 170)
-                    .foregroundStyle(Color.black)
             }
-            .padding(.bottom, 54)
         }
     }
     
 }
 
 #Preview {
-    OnBoardingView(rivename: "load", riveboardname: "Simple_loader", Title:"\"어케 만들었냐?\"" , DescFirst: "나만의 홍보물,", DescSecond: "AI를 활용해 쉽게 만들어보세요!")
+    FirstOnBoardingView(rivename: "load", riveboardname: "Simple_loader", Title:"\"어케 만들었냐?\"" , DescFirst: "나만의 홍보물,", DescSecond: "AI를 활용해 쉽게 만들어보세요!")
 }
