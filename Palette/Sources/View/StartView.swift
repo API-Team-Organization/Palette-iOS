@@ -15,10 +15,9 @@ struct StartView: View {
     var body: some View {
         ZStack{
             Color(.white).ignoresSafeArea()
-            Text("StartView!")
-                .foregroundStyle(Color.black)
-                .fullScreenCover(isPresented: $isFirstLaunching) {
-                    OnBoardingTabView(isFirstLaunching: $isFirstLaunching)
+            VStack {
+                Image("PaletteLogo")
+                T
             }
         }
     }

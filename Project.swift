@@ -24,6 +24,15 @@ let project = Project(
                         "Pretendard-Regular.otf",
                         "Pretendard-SemiBold.otf",
                         "Pretendard-Thin.otf",
+                        "SUIT-Bold.otf",
+                        "SUIT-ExtraBold.otf",
+                        "SUIT-ExtraLight.otf",
+                        "SUIT-Heavy.otf",
+                        "SUIT-Light.otf",
+                        "SUIT-Medium.otf",
+                        "SUIT-Regular.otf",
+                        "SUIT-SemiBold.otf",
+                        "SUIT-Thin.otf",
                    ]
                 ]
             ),

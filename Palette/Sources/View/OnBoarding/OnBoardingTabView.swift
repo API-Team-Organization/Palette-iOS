@@ -24,5 +24,6 @@ struct OnBoardingTabView: View {
             LastOnBoardingView(isFirstLaunching: $isFirstLaunching, rivename: "load", riveboardname: "Simple_loader", Title:"이 모든게, 무료." , DescFirst: "비싼 툴과 외주비 지출,", DescSecond: "이제는 Palette와 무료로 제작하세요.")
         }
         .tabViewStyle(PageTabViewStyle())
+        .indexViewStyle(PageIndexViewStyle(backgroundDisplayMode: .always))
     }
 }
