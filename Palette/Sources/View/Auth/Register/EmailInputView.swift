@@ -14,4 +14,5 @@ struct EmailInputView: View {
 }
 
 #Preview {
+    EmailInputView()
 }

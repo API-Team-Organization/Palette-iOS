@@ -18,8 +18,8 @@ struct StartView: View {
         ZStack{
             Color(.white).ignoresSafeArea()
             VStack {
+                Spacer()
                 Image("PaletteLogo")
-                    .padding(.top, 150)
                 Text("\(Text("AI").font(.custom("SUIT-ExtraBold", size: 25)))로 그리다, \(Text("Palette").font(.custom("SUIT-ExtraBold", size: 25)))")
                     .font(.custom("Pretendard-ExtraBold", size: 25))
                     .foregroundStyle(Color.black)
@@ -30,7 +30,7 @@ struct StartView: View {
                     .foregroundStyle(Color.black)
                 Text("\(Text("AI").font(.custom("SUIT-Medium", size: 17)))를 활용해 쉽게 만들어보세요! ")
                     .foregroundStyle(Color.black)
-                    .padding(.bottom, 240)
+                Spacer()
                 Button {
                     print("Button Pressed")
                 } label: {
@@ -50,7 +50,7 @@ struct StartView: View {
 
                     Button(action: {
                         /*flow.replace([StartView()])*/
-                        flow.push([StartView()])
+                        flow.push(StartView())
                     }) {
                         Text("로그인")
                             .font(.custom("Pretendard-ExtraBold", size: 14))
