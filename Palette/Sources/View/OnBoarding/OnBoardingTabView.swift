@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-import SwiftUI
-
 struct OnBoardingTabView: View {
     @Binding var isFirstLaunching: Bool
     
