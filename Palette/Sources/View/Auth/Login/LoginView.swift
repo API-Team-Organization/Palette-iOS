@@ -7,10 +7,16 @@
 
 import SwiftUI
 
+extension View {
+    func endTextEditing() {
+    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+}
+
 struct LoginView: View {
     
-    @State var email: String
-    @State var password: String
+    @State var email: String = ""
+    @State var password: String = ""
     
     var body: some View {
         ZStack {
@@ -52,10 +58,12 @@ struct LoginView: View {
                 Spacer()
             }
         }
+        .onTapGesture {
+            self.endTextEditing()
+        }
     }
 }
-                                  
-
+                       
 #Preview {
     LoginView(email: "", password: "")
 }

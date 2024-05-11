@@ -32,7 +32,7 @@ struct StartView: View {
                     .foregroundStyle(Color.black)
                 Spacer()
                 Button {
-                    print("Button Pressed")
+                    flow.push(EmailInputView())
                 } label: {
                     Text("회원가입")
                         .fontWeight(.bold)
@@ -50,7 +50,7 @@ struct StartView: View {
 
                     Button(action: {
                         /*flow.replace([StartView()])*/
-                        flow.push(StartView())
+                        flow.push(LoginView())
                     }) {
                         Text("로그인")
                             .font(.custom("Pretendard-ExtraBold", size: 14))

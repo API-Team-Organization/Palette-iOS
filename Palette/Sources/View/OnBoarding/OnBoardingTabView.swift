@@ -25,3 +25,4 @@ struct OnBoardingTabView: View {
         .indexViewStyle(PageIndexViewStyle(backgroundDisplayMode: .always))
     }
 }
+
