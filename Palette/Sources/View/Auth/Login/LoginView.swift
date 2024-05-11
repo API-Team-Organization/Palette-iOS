@@ -8,6 +8,10 @@
 import SwiftUI
 
 struct LoginView: View {
+    
+    @State var email: String
+    @State var password: String
+    
     var body: some View {
         ZStack {
             Color(.white).ignoresSafeArea()
@@ -35,6 +39,17 @@ struct LoginView: View {
                         .foregroundStyle(Color("DescText"))
                     Spacer()
                 }
+                HStack {
+                    TextField("이메일",text: $email)
+                        .padding(.leading, 10)
+                        .frame(width:363, height: 55)
+                        .background(Color("TextFieldBack"))
+                        .cornerRadius(15.0)
+                        .font(.custom("SUIT-SemiBold", size: 18))
+                        .padding(.leading, 15)
+                    Spacer()
+                }
+                Spacer()
             }
         }
     }
@@ -42,5 +57,5 @@ struct LoginView: View {
                                   
 
 #Preview {
-    LoginView()
+    LoginView(email: "", password: "")
 }
