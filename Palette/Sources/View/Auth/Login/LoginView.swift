@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FlowKit
 
 extension View {
     func endTextEditing() {
@@ -17,6 +18,7 @@ struct LoginView: View {
     
     @State var email: String = ""
     @State var password: String = ""
+    @Flow var flow
     
     var body: some View {
         ZStack {
@@ -35,6 +37,7 @@ struct LoginView: View {
                     Text("\(Text("Palette").font(.custom("SUIT-ExtraBold", size: 27)))에 로그인하기")
                         .font(.custom("SUIT-ExtraBold", size: 27))
                         .padding(.leading, 15)
+                        .foregroundStyle(.black)
                     Spacer()
                 }
                 .padding(.bottom, 2)
@@ -45,8 +48,9 @@ struct LoginView: View {
                         .foregroundStyle(Color("DescText"))
                     Spacer()
                 }
+                .padding(.bottom, 30)
                 HStack {
-                    TextField("이메일",text: $email)
+                    TextField("email",text: $email, prompt: Text("이메일").foregroundStyle(Color("DescText")))
                         .padding(.leading, 10)
                         .frame(width:363, height: 55)
                         .background(Color("TextFieldBack"))
@@ -55,11 +59,38 @@ struct LoginView: View {
                         .padding(.leading, 15)
                     Spacer()
                 }
+                .padding(.bottom, 10)
+                HStack {
+                    TextField("pw",text: $password, prompt: Text("비밀번호").foregroundStyle(Color("DescText")))
+                        .padding(.leading, 10)
+                        .frame(width:363, height: 55)
+                        .background(Color("TextFieldBack"))
+                        .cornerRadius(15.0)
+                        .cornerRadius(15.0)
+                        .font(.custom("SUIT-SemiBold", size: 18))
+                        .padding(.leading, 15)
+                    Spacer()
+                }
                 Spacer()
+                Spacer()
+                Spacer()
+                Spacer()
+                Button(action: {
+                    flow.push(LoginView())
+                }) {
+                    Text("로그인")
+                        .font(.custom("Pretendard-ExtraBold", size: 16))
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .frame(width: 363, height: 55)
+                        .background(Color.accentColor)
+                        .cornerRadius(12)
+                        .padding(.bottom, 30)
+                }
             }
-        }
-        .onTapGesture {
-            self.endTextEditing()
+            .onTapGesture {
+                self.endTextEditing()
+            }
         }
     }
 }
