@@ -1,16 +1,17 @@
 //
-//  EmailInputView.swift
+//  VerifyCodeInputView.swift
 //  Palette
 //
-//  Created by 4rNe5 on 5/9/24.
+//  Created by 4rNe5 on 5/16/24.
 //
 
 import SwiftUI
 import FlowKit
 
-struct EmailInputView: View {
+struct VerifyCodeInputView: View {
     
-    @State var email: String = ""
+    @State var email: String
+    @State var verifyCode: String = ""
     @Flow var flow
     
     var body: some View {
@@ -19,7 +20,7 @@ struct EmailInputView: View {
             VStack {
                 Spacer()
                 HStack {
-                    Text("이메일 주소를 알려주세요!")
+                    Text("인증번호를 보내드렸어요!")
                         .font(.custom("Pretendard-ExtraBold", size: 27))
                         .padding(.leading, 15)
                         .foregroundStyle(.black)
@@ -27,7 +28,7 @@ struct EmailInputView: View {
                 }
                 .padding(.bottom, 2)
                 HStack {
-                    Text("본인인증을 위해 필요해요!")
+                    Text("이메일로 전송된 인증번호를 입력해주세요!")
                         .font(.custom("SUIT-Bold", size: 15))
                         .padding(.leading, 17)
                         .foregroundStyle(Color("DescText"))
@@ -35,7 +36,19 @@ struct EmailInputView: View {
                 }
                 .padding(.bottom, 30)
                 HStack {
-                    TextField("email",text: $email, prompt: Text("이메일").foregroundStyle(Color("DescText")))
+                    Text(email)
+                        .padding(.leading, 10)
+                        .frame(width:363, height: 55, alignment: .leading)
+                        .background(Color("TextFieldBack"))
+                        .cornerRadius(15.0)
+                        .foregroundStyle(.black)
+                        .font(.custom("SUIT-SemiBold", size: 18))
+                        .padding(.leading, 15)
+                    Spacer()
+                }
+                .padding(.bottom, 10)
+                HStack {
+                    TextField("verifycode",text: $verifyCode, prompt: Text("인증번호").foregroundStyle(Color("DescText")))
                         .padding(.leading, 10)
                         .frame(width:363, height: 55)
                         .background(Color("TextFieldBack"))
@@ -51,9 +64,9 @@ struct EmailInputView: View {
                 Spacer()
                 Spacer()
                 Button(action: {
-                    flow.push(VerifyCodeInputView(email: email))
+                    flow.push(PWInputView(email: email, verifyCode: verifyCode))
                 }) {
-                    Text("인증번호 받기")
+                    Text("인증하기")
                         .font(.custom("Pretendard-ExtraBold", size: 16))
                         .fontWeight(.bold)
                         .foregroundColor(.white)
@@ -71,5 +84,5 @@ struct EmailInputView: View {
 }
 
 #Preview {
-    EmailInputView()
+    VerifyCodeInputView(email: "me@4rne5.dev")
 }
