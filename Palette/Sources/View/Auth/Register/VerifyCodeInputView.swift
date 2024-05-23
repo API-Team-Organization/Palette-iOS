@@ -12,6 +12,7 @@ struct VerifyCodeInputView: View {
     
     @State var email: String
     @State var verifyCode: String = ""
+    @State private var showingBlankAlert = false
     @Flow var flow
     
     var body: some View {
@@ -64,7 +65,11 @@ struct VerifyCodeInputView: View {
                 Spacer()
                 Spacer()
                 Button(action: {
-                    flow.push(PWInputView(email: email, verifyCode: verifyCode))
+                    if verifyCode == "" {
+                        self.showingBlankAlert = true
+                    } else {
+                        flow.push(PWInputView(email: email, verifyCode: verifyCode))
+                    }
                 }) {
                     Text("인증하기")
                         .font(.custom("Pretendard-ExtraBold", size: 16))
@@ -76,12 +81,15 @@ struct VerifyCodeInputView: View {
                         .padding(.bottom, 30)
                 }
             }
+            .alert(isPresented: $showingBlankAlert) {
+                Alert(title: Text("앗! 인증코드가 비어있어요!!"), message: Text("인증코드를 입력해주세요."), dismissButton: .default(Text("확인")))
+                }
+            }
             .onTapGesture {
                 self.endTextEditing()
             }
         }
     }
-}
 
 #Preview {
     VerifyCodeInputView(email: "me@4rne5.dev")

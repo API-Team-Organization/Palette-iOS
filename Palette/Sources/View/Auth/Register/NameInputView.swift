@@ -1,17 +1,21 @@
 //
-//  EmailInputView.swift
+//  NameInputView.swift
 //  Palette
 //
-//  Created by 4rNe5 on 5/9/24.
+//  Created by 4rNe5 on 5/23/24.
 //
 
 import SwiftUI
 import FlowKit
 
-struct EmailInputView: View {
+struct NameInputView: View {
     
-    @State var email: String = ""
-    @State private var showingBlankAlert = false
+    var email: String
+    var verifyCode: String
+    var pw: String
+    var pwCheck: String
+    var birthday: String
+    @State var userName: String = ""
     @Flow var flow
     
     var body: some View {
@@ -20,7 +24,7 @@ struct EmailInputView: View {
             VStack {
                 Spacer()
                 HStack {
-                    Text("이메일 주소를 알려주세요!")
+                    Text("이름을 입력해주세요!")
                         .font(.custom("Pretendard-ExtraBold", size: 27))
                         .padding(.leading, 15)
                         .foregroundStyle(.black)
@@ -28,7 +32,7 @@ struct EmailInputView: View {
                 }
                 .padding(.bottom, 2)
                 HStack {
-                    Text("본인인증을 위해 필요해요!")
+                    Text("거의 다 왔습니다…")
                         .font(.custom("SUIT-Bold", size: 15))
                         .padding(.leading, 17)
                         .foregroundStyle(Color("DescText"))
@@ -36,7 +40,7 @@ struct EmailInputView: View {
                 }
                 .padding(.bottom, 30)
                 HStack {
-                    TextField("email",text: $email, prompt: Text("이메일").foregroundStyle(Color("DescText")))
+                    TextField("email", text: $userName, prompt: Text("이름").foregroundStyle(Color("DescText")))
                         .padding(.leading, 10)
                         .frame(width:363, height: 55)
                         .background(Color("TextFieldBack"))
@@ -52,13 +56,9 @@ struct EmailInputView: View {
                 Spacer()
                 Spacer()
                 Button(action: {
-                    if email == "" {
-                        self.showingBlankAlert = true
-                    } else {
-                        flow.push(VerifyCodeInputView(email: email))
-                    }
+                    
                 }) {
-                    Text("인증번호 받기")
+                    Text("완료하기")
                         .font(.custom("Pretendard-ExtraBold", size: 16))
                         .fontWeight(.bold)
                         .foregroundColor(.white)
@@ -68,16 +68,14 @@ struct EmailInputView: View {
                         .padding(.bottom, 30)
                 }
             }
-            .alert(isPresented: $showingBlankAlert) {
-                Alert(title: Text("앗! 인증코드가 비어있어요!!"), message: Text("인증코드를 입력해주세요."), dismissButton: .default(Text("확인")))
-                }
-            }
             .onTapGesture {
                 self.endTextEditing()
             }
+        }
     }
 }
 
 #Preview {
-    EmailInputView()
+    NameInputView(email: "23wdwad@gmail.com", verifyCode: "010101", pw: "23wdwad", pwCheck: "23wdwad", birthday: "2007-04-28")
 }
+
