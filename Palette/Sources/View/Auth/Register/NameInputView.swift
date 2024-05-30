@@ -7,8 +7,11 @@
 
 import SwiftUI
 import FlowKit
+import Alamofire
 
 struct NameInputView: View {
+    
+    let serverurl = "http://standard.alcl.cloud:24136/auth/register"
     
     var email: String
     var verifyCode: String
@@ -56,14 +59,14 @@ struct NameInputView: View {
                 Spacer()
                 Spacer()
                 Button(action: {
-                    
+                   
                 }) {
                     Text("완료하기")
                         .font(.custom("Pretendard-ExtraBold", size: 16))
                         .fontWeight(.bold)
                         .foregroundColor(.white)
                         .frame(width: 363, height: 55)
-                        .background(Color.accentColor)
+                        .background(Color("AccentColor"))
                         .cornerRadius(12)
                         .padding(.bottom, 30)
                 }

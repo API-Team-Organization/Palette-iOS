@@ -92,7 +92,7 @@ struct PWInputView: View {
                         .fontWeight(.bold)
                         .foregroundColor(.white)
                         .frame(width: 363, height: 55)
-                        .background(Color.accentColor)
+                        .background(Color("AccentColor"))
                         .cornerRadius(12)
                         .padding(.bottom, 30)
                 }

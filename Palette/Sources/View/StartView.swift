@@ -38,7 +38,7 @@ struct StartView: View {
                         .fontWeight(.bold)
                         .foregroundColor(.white)
                         .frame(width: 330, height: 50)
-                        .background(Color.accentColor)
+                        .background(Color("AccentColor"))
                         .cornerRadius(12)
                     
                 }
@@ -54,7 +54,7 @@ struct StartView: View {
                     }) {
                         Text("로그인")
                             .font(.custom("Pretendard-ExtraBold", size: 14))
-                            .foregroundStyle(Color.accentColor)
+                            .foregroundStyle(Color("AccentColor"))
                     }
                 }
                 .padding(.bottom, 36)
