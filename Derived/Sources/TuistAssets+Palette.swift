@@ -22,7 +22,10 @@
 public enum PaletteAsset {
   public enum Assets {
   public static let accentColor = PaletteColors(name: "AccentColor")
+    public static let descText = PaletteColors(name: "DescText")
     public static let paletteLogo = PaletteImages(name: "PaletteLogo")
+    public static let textFieldBack = PaletteColors(name: "TextFieldBack")
+    public static let textFieldDesc = PaletteColors(name: "TextFieldDesc")
   }
   public enum PreviewAssets {
   }

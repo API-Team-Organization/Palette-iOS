@@ -31,7 +31,19 @@ public enum PaletteFontFamily {
     public static let thin = PaletteFontConvertible(name: "Pretendard-Thin", family: "Pretendard", path: "Pretendard-Thin.otf")
     public static let all: [PaletteFontConvertible] = [black, bold, extraBold, extraLight, light, medium, regular, semiBold, thin]
   }
-  public static let allCustomFonts: [PaletteFontConvertible] = [Pretendard.all].flatMap { $0 }
+  public enum Suit {
+    public static let bold = PaletteFontConvertible(name: "SUIT-Bold", family: "SUIT", path: "SUIT-Bold.otf")
+    public static let extraBold = PaletteFontConvertible(name: "SUIT-ExtraBold", family: "SUIT", path: "SUIT-ExtraBold.otf")
+    public static let extraLight = PaletteFontConvertible(name: "SUIT-ExtraLight", family: "SUIT", path: "SUIT-ExtraLight.otf")
+    public static let heavy = PaletteFontConvertible(name: "SUIT-Heavy", family: "SUIT", path: "SUIT-Heavy.otf")
+    public static let light = PaletteFontConvertible(name: "SUIT-Light", family: "SUIT", path: "SUIT-Light.otf")
+    public static let medium = PaletteFontConvertible(name: "SUIT-Medium", family: "SUIT", path: "SUIT-Medium.otf")
+    public static let regular = PaletteFontConvertible(name: "SUIT-Regular", family: "SUIT", path: "SUIT-Regular.otf")
+    public static let semiBold = PaletteFontConvertible(name: "SUIT-SemiBold", family: "SUIT", path: "SUIT-SemiBold.otf")
+    public static let thin = PaletteFontConvertible(name: "SUIT-Thin", family: "SUIT", path: "SUIT-Thin.otf")
+    public static let all: [PaletteFontConvertible] = [bold, extraBold, extraLight, heavy, light, medium, regular, semiBold, thin]
+  }
+  public static let allCustomFonts: [PaletteFontConvertible] = [Pretendard.all, Suit.all].flatMap { $0 }
   public static func registerAllCustomFonts() {
     allCustomFonts.forEach { $0.register() }
   }
