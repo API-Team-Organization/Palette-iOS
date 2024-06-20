@@ -22,11 +22,13 @@ struct AddTaskButtom <Content: View>: View {
                 HStack {
                     Image("Plus")
                         .padding(.leading, 5)
+                    
                     VStack(alignment: .leading) {
                         Text("새 작업 시작하기 ")
                             .font(.custom("Pretendard-Bold", size: 24))
                             .foregroundStyle(.black)
                             .padding(.bottom, 5)
+                        
                         Text("\(Text("Palette AI").font(.custom("SUIT-Bold", size: 18)))와 당신만의")
                             .font(.custom("Pretendard-SemiBold", size: 18))
                             .foregroundStyle(Color("DescText"))
@@ -36,6 +38,7 @@ struct AddTaskButtom <Content: View>: View {
                     }
                     .padding(.leading, 15)
                 }
+                
             }
             .frame(width: 340, height: 140)
             .clipShape(RoundedRectangle(cornerRadius: 17, style: .continuous))
@@ -44,5 +47,7 @@ struct AddTaskButtom <Content: View>: View {
 }
 
 #Preview {
+    
     AddTaskButtom(destinationView: StartView())
+    
 }

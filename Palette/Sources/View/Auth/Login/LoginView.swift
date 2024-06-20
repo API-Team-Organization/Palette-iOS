@@ -78,7 +78,7 @@ struct LoginView: View {
                 Spacer()
                 Spacer()
                 Button(action: {
-                    flow.push(LoginView())
+                    flow.replace([TestView()])
                 }) {
                     Text("로그인")
                         .font(.custom("Pretendard-ExtraBold", size: 16))
