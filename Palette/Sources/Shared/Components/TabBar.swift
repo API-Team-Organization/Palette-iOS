@@ -9,13 +9,13 @@ enum Tab {
 
 class RiveTabbarVM: RiveViewModel {
 
-    @Binding var selectedTab: Tab
+    @Published var selectedTab: Tab
 
-    init(selectedTab: Binding<Tab>) {
-        self._selectedTab = selectedTab
+    init(selectedTab: Tab) {
+        self.selectedTab = selectedTab
         super.init(fileName: "api_bottom_bar")
     }
-    
+        
     func view() -> some View {
         return super.view()
     }
