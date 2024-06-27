@@ -72,11 +72,7 @@ struct LoginView: View {
                         .padding(.leading, 15)
                     Spacer()
                 }
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
-                Spacer()
+                .padding(.bottom, 290)
                 Button(action: {
                     flow.replace([MainView()])
                 }) {

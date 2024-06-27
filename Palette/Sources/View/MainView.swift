@@ -19,23 +19,24 @@ struct MainView: View {
     var body: some View {
         ZStack {
             Color(.white).ignoresSafeArea()
+            
+            switch selectedTab {
+            case .search:
+                Text("search").foregroundStyle(.black)
+            case .home:
+                ChatListView()
+            case .setting:
+                Text("The setting Tab").foregroundStyle(.black)
+            }
+            
             VStack {
-                ForEach(0..<81) { _ in
+                ForEach(0..<85) { _ in
                     Spacer()
                 }
                 tabbar.view()
             }
             .onChange(of: tabbar.selectedTab) { newValue in
                 selectedTab = newValue
-            }
-            
-            switch selectedTab {
-            case .search:
-                Text("search").foregroundStyle(.black)
-            case .home:
-                Text("The home Tab").foregroundStyle(.black)
-            case .setting:
-                Text("The setting Tab").foregroundStyle(.black)
             }
         }
         .onAppear {
