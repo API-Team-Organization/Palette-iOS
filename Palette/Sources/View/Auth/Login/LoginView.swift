@@ -7,6 +7,7 @@
 
 import SwiftUI
 import FlowKit
+import Alamofire
 
 extension View {
     func endTextEditing() {
@@ -18,7 +19,33 @@ struct LoginView: View {
     
     @State var email: String = ""
     @State var password: String = ""
+    @State private var showingAlert = false
     @Flow var flow
+    
+    
+    func handleLogin() async {
+        let url = "http://standard.alcl.cloud:24136/auth/login"
+        let credentials = LoginRequestModel(email: email, password: password)
+        
+        do {
+            let request = AF.request(url,
+                                     method: .post,
+                                     parameters: credentials,
+                                     encoder: JSONParameterEncoder.default)
+            
+            let response = try await request.serializingData().value
+            
+            let json = try JSON(data: response)
+            if let token = json["data"]["token"].string {
+                print("Received token: \(token)")
+                UserDefaults.standard.set(token, forKey: "accessToken")
+            }
+        } catch {
+            showingAlert = true
+            print("error : \(error)")
+        }
+    }
+        
     
     var body: some View {
         ZStack {
@@ -74,7 +101,9 @@ struct LoginView: View {
                 }
                 .padding(.bottom, 290)
                 Button(action: {
-                    flow.replace([MainView()])
+                    Task {
+                        await handleLogin()
+                    }
                 }) {
                     Text("로그인")
                         .font(.custom("Pretendard-ExtraBold", size: 16))

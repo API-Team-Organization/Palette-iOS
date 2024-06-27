@@ -47,7 +47,5 @@ struct AddTaskButtom <Content: View>: View {
 }
 
 #Preview {
-    
     AddTaskButtom(destinationView: StartView())
-    
 }

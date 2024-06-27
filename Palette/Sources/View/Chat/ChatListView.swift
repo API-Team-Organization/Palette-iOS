@@ -28,7 +28,8 @@ struct ChatListView: View {
                         Spacer()
                     }
                     .padding(.top, 60)
-                    Spacer()
+                    .padding(.bottom, 30)
+                    AddTaskButtom(destinationView: Text("New"))
                 }
             }
             .navigationBarHidden(true)
