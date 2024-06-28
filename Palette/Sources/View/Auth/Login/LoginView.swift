@@ -19,33 +19,55 @@ struct LoginView: View {
     
     @State var email: String = ""
     @State var password: String = ""
-    @State private var showingAlert = false
+    @State private var showingfailAlert = false
+    @State private var showinginputAlert = false
     @Flow var flow
+    
+    let fail_alert = Alert(title: "로그인 실패",
+                      message: "로그인에 실패했습니다.",
+                      dismissButton: .default("확인"))
+    let input_alert = Alert(title: "입력정보 오류",
+                      message: "비밀번호나 아이디를 확인해주세요.",
+                      dismissButton: .default("확인"))
     
     
     func handleLogin() async {
         let url = "http://standard.alcl.cloud:24136/auth/login"
         let credentials = LoginRequestModel(email: email, password: password)
         
-        do {
-            let request = AF.request(url,
-                                     method: .post,
-                                     parameters: credentials,
-                                     encoder: JSONParameterEncoder.default)
-            
-            let response = try await request.serializingData().value
-            
-            let json = try JSON(data: response)
-            if let token = json["data"]["token"].string {
-                print("Received token: \(token)")
-                UserDefaults.standard.set(token, forKey: "accessToken")
-            }
-        } catch {
-            showingAlert = true
-            print("error : \(error)")
+        AF.request(url,
+                   method: .post,
+                   parameters: credentials,
+                   encoder: JSONParameterEncoder.default)
+            .responseData { response in
+                switch response.result {
+                case .success(_):
+                    if let headers = response.response?.allHeaderFields,
+                       let token = headers["X-AUTH-Token"] as? String {
+                        print("Received token: \(token)")
+                        
+                        // KeyChain에 토큰 저장
+                        if let tokenData = token.data(using: .utf8) {
+                            let saveStatus = KeychainManager.save(key: "accessToken", data: tokenData)
+                            if saveStatus == noErr {
+                                print("Token successfully saved to KeyChain")
+                                flow.replace([MainView()])
+                            } else {
+                                print("Failed to save token to KeyChain. Status: \(saveStatus)")
+                            }
+                        } else {
+                            print("Failed to convert token to Data")
+                        }
+                    } else {
+                        print("No token found in response headers")
+                        flow.alert(fail_alert)
+                    }
+                case .failure(let error):
+                    print("Error: \(error)")
+                    flow.alert(fail_alert)
+                }
         }
     }
-        
     
     var body: some View {
         ZStack {
@@ -101,8 +123,11 @@ struct LoginView: View {
                 }
                 .padding(.bottom, 290)
                 Button(action: {
-                    Task {
-                        await handleLogin()
+                    if email == "" || password == "" {
+                        flow.alert(input_alert)
+                        
+                    } else {
+                        Task { await handleLogin() }
                     }
                 }) {
                     Text("로그인")
