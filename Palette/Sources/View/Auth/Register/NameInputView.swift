@@ -20,6 +20,9 @@ struct NameInputView: View {
     var birthday: String
     @State var userName: String = ""
     @Flow var flow
+    let input_alert = Alert(title: "앗! 이름이 비어있어요!",
+                      message: "이름을 입력해주세요.",
+                      dismissButton: .default("확인"))
     
     var body: some View {
         ZStack {
