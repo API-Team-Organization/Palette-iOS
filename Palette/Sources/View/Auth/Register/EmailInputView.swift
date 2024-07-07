@@ -18,7 +18,6 @@ struct EmailInputView: View {
         ZStack {
             Color(.white).ignoresSafeArea()
             VStack {
-                Spacer()
                 HStack {
                     Text("이메일 주소를 알려주세요!")
                         .font(.custom("Pretendard-ExtraBold", size: 27))
@@ -27,6 +26,7 @@ struct EmailInputView: View {
                     Spacer()
                 }
                 .padding(.bottom, 2)
+                .padding(.top, 50)
                 HStack {
                     Text("본인인증을 위해 필요해요!")
                         .font(.custom("SUIT-Bold", size: 15))
@@ -55,10 +55,10 @@ struct EmailInputView: View {
                     if email == "" {
                         self.showingBlankAlert = true
                     } else {
-                        flow.push(VerifyCodeInputView(email: email))
+                        flow.push(PWInputView(email: email))
                     }
                 }) {
-                    Text("인증번호 받기")
+                    Text("다음으로")
                         .font(.custom("Pretendard-ExtraBold", size: 16))
                         .fontWeight(.bold)
                         .foregroundColor(.white)

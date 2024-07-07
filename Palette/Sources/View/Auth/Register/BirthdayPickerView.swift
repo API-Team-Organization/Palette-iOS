@@ -11,7 +11,6 @@ import FlowKit
 struct BirthdayPickerView: View {
     
     var email: String
-    var verifyCode: String
     var pw: String
     var pwCheck: String
     @State private var birthDay = Date()
@@ -21,7 +20,6 @@ struct BirthdayPickerView: View {
         ZStack {
             Color(.white).ignoresSafeArea()
             VStack {
-                Spacer()
                 HStack {
                     Text("생년월일을 선택해주세요!")
                         .font(.custom("Pretendard-ExtraBold", size: 27))
@@ -30,6 +28,7 @@ struct BirthdayPickerView: View {
                     Spacer()
                 }
                 .padding(.bottom, 2)
+                .padding(.top, 50)
                 HStack {
                     Text("(당신의 생년월일이 궁금하다는 그런 내용)")
                         .font(.custom("SUIT-Bold", size: 15))
@@ -51,7 +50,7 @@ struct BirthdayPickerView: View {
                 Spacer()
                 Spacer()
                 Button(action: {
-                    flow.push(NameInputView(email: email, verifyCode: verifyCode, pw: pw, pwCheck: pwCheck, birthday: formattedDate(date: birthDay)))
+                    flow.push(NameInputView(email: email,pw: pw, pwCheck: pwCheck, birthday: formattedDate(date: birthDay)))
                 }) {
                     Text("다음으로")
                         .font(.custom("Pretendard-ExtraBold", size: 16))
@@ -71,5 +70,5 @@ struct BirthdayPickerView: View {
 }
 
 #Preview {
-    BirthdayPickerView(email: "me@4rne5.dev", verifyCode: "000000", pw: "", pwCheck: "")
+    BirthdayPickerView(email: "me@4rne5.dev", pw: "", pwCheck: "")
 }

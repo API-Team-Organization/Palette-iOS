@@ -15,7 +15,6 @@ enum alertcase {
 struct PWInputView: View {
     
     var email: String
-    var verifyCode: String
     @State var pw: String = ""
     @State var pwCheck: String = ""
     @State private var showAlert = false
@@ -31,7 +30,7 @@ struct PWInputView: View {
             showAlert = true
         } else {
             showAlert = false
-            flow.push(BirthdayPickerView(email: email, verifyCode: verifyCode, pw: pw, pwCheck: pwCheck))
+            flow.push(BirthdayPickerView(email: email, pw: pw, pwCheck: pwCheck))
         }
     }
     
@@ -39,7 +38,6 @@ struct PWInputView: View {
         ZStack {
             Color(.white).ignoresSafeArea()
             VStack {
-                Spacer()
                 HStack {
                     Text("비밀번호를 설정해주세요!")
                         .font(.custom("Pretendard-ExtraBold", size: 27))
@@ -48,6 +46,7 @@ struct PWInputView: View {
                     Spacer()
                 }
                 .padding(.bottom, 2)
+                .padding(.top, 50)
                 HStack {
                     Text("비밀번호를 잊어버리지 않도록 주의해주세요!")
                         .font(.custom("SUIT-Bold", size: 15))
@@ -117,5 +116,5 @@ struct PWInputView: View {
 
 
 #Preview {
-    PWInputView(email: "me@4rne5.dev", verifyCode: "000000")
+    PWInputView(email: "me@4rne5.dev")
 }

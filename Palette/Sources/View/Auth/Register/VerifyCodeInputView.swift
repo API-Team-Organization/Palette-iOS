@@ -10,7 +10,11 @@ import FlowKit
 
 struct VerifyCodeInputView: View {
     
-    @State var email: String
+    var email: String
+    var pw: String
+    var pwCheck: String
+    var birthday: String
+    var userName: String
     @State var verifyCode: String = ""
     @State private var showingBlankAlert = false
     @Flow var flow
@@ -19,15 +23,15 @@ struct VerifyCodeInputView: View {
         ZStack {
             Color(.white).ignoresSafeArea()
             VStack {
-                Spacer()
                 HStack {
-                    Text("인증번호를 보내드렸어요!")
+                    Text("이메일 인증을 시작할깨요!")
                         .font(.custom("Pretendard-ExtraBold", size: 27))
                         .padding(.leading, 15)
                         .foregroundStyle(.black)
                     Spacer()
                 }
                 .padding(.bottom, 2)
+                .padding(.top, 50)
                 HStack {
                     Text("이메일로 전송된 인증번호를 입력해주세요!")
                         .font(.custom("SUIT-Bold", size: 15))
@@ -36,18 +40,7 @@ struct VerifyCodeInputView: View {
                     Spacer()
                 }
                 .padding(.bottom, 30)
-                HStack {
-                    Text(email)
-                        .padding(.leading, 10)
-                        .frame(width:363, height: 55, alignment: .leading)
-                        .background(Color("TextFieldBack"))
-                        .cornerRadius(15.0)
-                        .foregroundStyle(.black)
-                        .font(.custom("SUIT-SemiBold", size: 18))
-                        .padding(.leading, 15)
-                    Spacer()
-                }
-                .padding(.bottom, 10)
+            
                 HStack {
                     TextField("verifycode",text: $verifyCode, prompt: Text("인증번호").foregroundStyle(Color("DescText")))
                         .padding(.leading, 10)
@@ -68,7 +61,7 @@ struct VerifyCodeInputView: View {
                     if verifyCode == "" {
                         self.showingBlankAlert = true
                     } else {
-                        flow.push(PWInputView(email: email, verifyCode: verifyCode))
+                        
                     }
                 }) {
                     Text("인증하기")
@@ -90,7 +83,3 @@ struct VerifyCodeInputView: View {
             }
         }
     }
-
-#Preview {
-    VerifyCodeInputView(email: "me@4rne5.dev")
-}

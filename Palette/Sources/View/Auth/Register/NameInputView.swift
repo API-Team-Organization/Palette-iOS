@@ -14,7 +14,6 @@ struct NameInputView: View {
     let serverurl = "http://standard.alcl.cloud:24136/auth/register"
     
     var email: String
-    var verifyCode: String
     var pw: String
     var pwCheck: String
     var birthday: String
@@ -28,7 +27,6 @@ struct NameInputView: View {
         ZStack {
             Color(.white).ignoresSafeArea()
             VStack {
-                Spacer()
                 HStack {
                     Text("이름을 입력해주세요!")
                         .font(.custom("Pretendard-ExtraBold", size: 27))
@@ -37,6 +35,7 @@ struct NameInputView: View {
                     Spacer()
                 }
                 .padding(.bottom, 2)
+                .padding(.top, 50)
                 HStack {
                     Text("거의 다 왔습니다…")
                         .font(.custom("SUIT-Bold", size: 15))
@@ -62,9 +61,9 @@ struct NameInputView: View {
                 Spacer()
                 Spacer()
                 Button(action: {
-                   
+                    flow.push(VerifyCodeInputView(email: email, pw: pw, pwCheck: pwCheck, birthday: birthday, userName: userName))
                 }) {
-                    Text("완료하기")
+                    Text("인증하러 가기")
                         .font(.custom("Pretendard-ExtraBold", size: 16))
                         .fontWeight(.bold)
                         .foregroundColor(.white)
@@ -82,6 +81,6 @@ struct NameInputView: View {
 }
 
 #Preview {
-    NameInputView(email: "23wdwad@gmail.com", verifyCode: "010101", pw: "23wdwad", pwCheck: "23wdwad", birthday: "2007-04-28")
+    NameInputView(email: "23wdwad@gmail.com", pw: "23wdwad", pwCheck: "23wdwad", birthday: "2007-04-28")
 }
 
