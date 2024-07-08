@@ -32,7 +32,7 @@ struct LoginView: View {
     
     
     func handleLogin() async {
-        let url = "http://standard.alcl.cloud:24136/auth/login"
+        let url = "https://paletteapp.xyz/auth/login"
         let credentials = LoginRequestModel(email: email, password: password)
         
         AF.request(url,
@@ -43,7 +43,7 @@ struct LoginView: View {
                 switch response.result {
                 case .success(_):
                     if let headers = response.response?.allHeaderFields,
-                       let token = headers["X-AUTH-Token"] as? String {
+                       let token = headers["x-auth-token"] as? String {
                         print("Received token: \(token)")
                         
                         // KeyChain에 토큰 저장

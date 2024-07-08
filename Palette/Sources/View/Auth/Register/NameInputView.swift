@@ -11,7 +11,7 @@ import Alamofire
 
 struct NameInputView: View {
     
-    let serverurl = "http://standard.alcl.cloud:24136/auth/register"
+    let serverurl = "https://paletteapp.xyz/auth/register"
     
     var email: String
     var pw: String
@@ -22,6 +22,51 @@ struct NameInputView: View {
     let input_alert = Alert(title: "앗! 이름이 비어있어요!",
                       message: "이름을 입력해주세요.",
                       dismissButton: .default("확인"))
+    let networkerr_alert = Alert(title: "앗! 오류가 발생했어요!",
+                      message: "다시 시도해주세요.",
+                      dismissButton: .default("확인"))
+    let fail_alert = Alert(title: "앗! 회원가입에 실패했어요!",
+                      message: "다시 시도해주세요.",
+                      dismissButton: .default("확인"))
+    
+    func sendRegisterRequest() async {
+        let url = "https://paletteapp.xyz/auth/register"
+        let credentials = SignUpRequestModel(username: userName, password: pw, birthDate: birthday, email: email)
+        
+        AF.request(url,
+                   method: .post,
+                   parameters: credentials,
+                   encoder: JSONParameterEncoder.default)
+            .responseData { response in
+                switch response.result {
+                case .success(_):
+                    if let headers = response.response?.allHeaderFields,
+                       let token = headers["x-auth-token"] as? String {
+                        print("Received token: \(token)")
+                        
+                        // KeyChain에 토큰 저장
+                        if let tokenData = token.data(using: .utf8) {
+                            let saveStatus = KeychainManager.save(key: "accessToken", data: tokenData)
+                            if saveStatus == noErr {
+                                print("Token successfully saved to KeyChain")
+                                flow.replace([VerifyCodeInputView(email: email, userName: userName)])
+                            } else {
+                                print("Failed to save token to KeyChain. Status: \(saveStatus)")
+                            }
+                        } else {
+                            print("Failed to convert token to Data")
+                        }
+                    } else {
+                        print("No token found in response headers")
+                        flow.alert(fail_alert)
+                    }
+                case .failure(let error):
+                    print("Error: \(error)")
+                    flow.alert(fail_alert)
+                }
+        }
+    }
+    
     
     var body: some View {
         ZStack {
@@ -61,7 +106,7 @@ struct NameInputView: View {
                 Spacer()
                 Spacer()
                 Button(action: {
-                    flow.push(VerifyCodeInputView(email: email, pw: pw, pwCheck: pwCheck, birthday: birthday, userName: userName))
+                    Task { await sendRegisterRequest() }
                 }) {
                     Text("인증하러 가기")
                         .font(.custom("Pretendard-ExtraBold", size: 16))

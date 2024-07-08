@@ -6,18 +6,75 @@
 //
 
 import SwiftUI
+import Alamofire
 import FlowKit
 
 struct VerifyCodeInputView: View {
     
     var email: String
-    var pw: String
-    var pwCheck: String
-    var birthday: String
     var userName: String
     @State var verifyCode: String = ""
     @State private var showingBlankAlert = false
     @Flow var flow
+    
+    let fail_alert = Alert(title: "앗! 인증에 실패했어요!",
+                      message: "다시 시도해주세요.",
+                      dismissButton: .default("확인"))
+    let resend_notif = Alert(title: "코드를 다시 전송했어요!",
+                      message: "메일함을 확인해주세요.",
+                      dismissButton: .default("확인"))
+    
+    func getHeaders() -> HTTPHeaders {
+        let token: String
+        if let tokenData = KeychainManager.load(key: "accessToken"),
+           let tokenString = String(data: tokenData, encoding: .utf8) {
+            token = tokenString
+        } else {
+            token = ""
+        }
+        
+        let headers: HTTPHeaders = [
+            "x-auth-token": token
+        ]
+        return headers
+    }
+    
+    func handleVerifyCode() async {
+        let url = "https://paletteapp.xyz/auth/verify"
+        let credentials = VerifyCodeModel(code: verifyCode)
+        
+        AF.request(url, method: .post, parameters: credentials, encoder: JSONParameterEncoder.default, headers: getHeaders())
+            .responseData { response in
+                switch response.result {
+                    
+                case .success(_):
+                    flow.replace([RegisterFinView()], animated: true)
+                    
+                case .failure(let error):
+                    flow.alert(fail_alert)
+                    
+                }
+            }
+    }
+    
+    func handleResendVerifyCode() async {
+        let url = "https://paletteapp.xyz/auth/resend"
+    
+        
+        AF.request(url, method: .post, headers: getHeaders())
+            .responseData { response in
+                switch response.result {
+                    
+                case .success(_):
+                    flow.alert(resend_notif)
+                    
+                case .failure(let error):
+                    flow.alert(fail_alert)
+                    
+                }
+            }
+    }
+    
     
     var body: some View {
         ZStack {
@@ -50,6 +107,20 @@ struct VerifyCodeInputView: View {
                         .foregroundStyle(.black)
                         .font(.custom("SUIT-SemiBold", size: 18))
                         .padding(.leading, 15)
+                        .padding(.bottom, 22)
+                
+                    Spacer()
+                }
+                HStack {
+                    Button(action: {
+                        Task { await handleResendVerifyCode() }
+                    }) {
+                        Text("코드 다시 전송하기")
+                            .font(.custom("Pretendard-Bold", size: 15))
+                            .fontWeight(.bold)
+                            .foregroundColor(Color("AccentColor"))
+                            .padding(.leading, 20)
+                    }
                     Spacer()
                 }
                 Spacer()
@@ -61,7 +132,7 @@ struct VerifyCodeInputView: View {
                     if verifyCode == "" {
                         self.showingBlankAlert = true
                     } else {
-                        
+                        Task { await handleVerifyCode() }
                     }
                 }) {
                     Text("인증하기")

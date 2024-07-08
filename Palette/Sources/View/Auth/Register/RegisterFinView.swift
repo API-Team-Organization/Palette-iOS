@@ -6,8 +6,12 @@
 //
 
 import SwiftUI
+import FlowKit
 
 struct RegisterFinView: View {
+    
+    @Flow var flow
+    
     var body: some View {
         ZStack {
             Color(.white).ignoresSafeArea()
@@ -33,7 +37,7 @@ struct RegisterFinView: View {
                 }
                 Spacer()
                 Button(action: {
-                   
+                    flow.replace([MainView()])
                 }) {
                     Text("완료하기")
                         .font(.custom("Pretendard-ExtraBold", size: 16))
