@@ -10,6 +10,7 @@ import FlowKit
 // TODO : 채팅뷰 만들기
 // TODO : 로딩화면 처리
 // TODO : 화면 전환에 토큰갱신 API 삽입
+// TODO : 로그인 과정 Exception Case 디양화
 
 struct PaletteIosAppApp: App {
     var body: some Scene {

@@ -13,13 +13,13 @@ class RiveTabbarVM: RiveViewModel {
 
     init(selectedTab: Tab) {
         self.selectedTab = selectedTab
-        super.init(fileName: "api_bottom_bar")
+        super.init(fileName: "api_bottom_blank")
     }
         
     func view() -> some View {
         return super.view()
     }
-
+    
     // Subscribe to Rive events and this delegate will be invoked
     @objc func onRiveEventReceived(onRiveEvent riveEvent: RiveEvent) {
         debugPrint("Event Name: \(riveEvent.name())")

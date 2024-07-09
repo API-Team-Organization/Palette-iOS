@@ -7,6 +7,7 @@
 
 import SwiftUI
 import RiveRuntime
+import FlowKit
 
 struct MainView: View {
     @State private var selectedTab: Tab = .home
@@ -30,7 +31,7 @@ struct MainView: View {
             }
             
             VStack {
-                ForEach(0..<85) { _ in
+                ForEach(0..<86) { _ in
                     Spacer()
                 }
                 tabbar.view()
@@ -43,4 +44,8 @@ struct MainView: View {
             tabbar.selectedTab = selectedTab
         }
     }
+}
+
+#Preview {
+    MainView()
 }

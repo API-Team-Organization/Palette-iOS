@@ -18,6 +18,7 @@ struct NameInputView: View {
     var pwCheck: String
     var birthday: String
     @State var userName: String = ""
+    @Environment(\.presentationMode) var presentationMode
     @Flow var flow
     let input_alert = Alert(title: "앗! 이름이 비어있어요!",
                       message: "이름을 입력해주세요.",
@@ -121,6 +122,8 @@ struct NameInputView: View {
             .onTapGesture {
                 self.endTextEditing()
             }
+            .navigationBarBackButtonHidden(true)
+            .navigationBarItems(leading: BackButton())
         }
     }
 }

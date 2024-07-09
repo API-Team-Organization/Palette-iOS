@@ -21,6 +21,7 @@ struct LoginView: View {
     @State var password: String = ""
     @State private var showingfailAlert = false
     @State private var showinginputAlert = false
+    @Environment(\.presentationMode) var presentationMode
     @Flow var flow
     
     let fail_alert = Alert(title: "로그인 실패",
@@ -111,7 +112,7 @@ struct LoginView: View {
                 }
                 .padding(.bottom, 10)
                 HStack {
-                    TextField("pw",text: $password, prompt: Text("비밀번호").foregroundStyle(Color("DescText")))
+                    SecureField("pw",text: $password, prompt: Text("비밀번호").foregroundStyle(Color("DescText")))
                         .padding(.leading, 10)
                         .frame(width:363, height: 55)
                         .background(Color("TextFieldBack"))
@@ -144,6 +145,8 @@ struct LoginView: View {
                 self.endTextEditing()
             }
         }
+        .navigationBarBackButtonHidden(true)
+        .navigationBarItems(leading: BackButton())
     }
 }
                        

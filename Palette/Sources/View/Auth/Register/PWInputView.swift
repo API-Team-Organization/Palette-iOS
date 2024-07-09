@@ -19,6 +19,7 @@ struct PWInputView: View {
     @State var pwCheck: String = ""
     @State private var showAlert = false
     @State private var activeAlert: alertcase? = nil
+    @Environment(\.presentationMode) var presentationMode
     @Flow var flow
     
     func validateFields() {
@@ -110,6 +111,8 @@ struct PWInputView: View {
         .onTapGesture {
             self.endTextEditing()
         }
+        .navigationBarBackButtonHidden(true)
+        .navigationBarItems(leading: BackButton())
     }
 }
 

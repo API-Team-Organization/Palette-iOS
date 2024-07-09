@@ -14,6 +14,7 @@ struct BirthdayPickerView: View {
     var pw: String
     var pwCheck: String
     @State private var birthDay = Date()
+    @Environment(\.presentationMode) var presentationMode
     @Flow var flow
     
     var body: some View {
@@ -66,6 +67,8 @@ struct BirthdayPickerView: View {
                 self.endTextEditing()
             }
         }
+        .navigationBarBackButtonHidden(true)
+        .navigationBarItems(leading: BackButton())
     }
 }
 

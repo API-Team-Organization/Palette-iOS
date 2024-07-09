@@ -12,6 +12,7 @@ struct EmailInputView: View {
     
     @State var email: String = ""
     @State private var showingBlankAlert = false
+    @Environment(\.presentationMode) var presentationMode
     @Flow var flow
     
     var body: some View {
@@ -74,7 +75,9 @@ struct EmailInputView: View {
             }
             .onTapGesture {
                 self.endTextEditing()
-            }
+        }
+        .navigationBarBackButtonHidden(true)
+        .navigationBarItems(leading: BackButton())
     }
 }
 

@@ -8,31 +8,35 @@
 import SwiftUI
 
 struct ChatListView: View {
+    
+    func getProfileData() async {
+        
+    }
+    
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack {
                 HStack {
                     VStack(alignment: .leading) {
                         Text("박준현님!")
-                            .font(.custom("SUIT-ExtraBold", size: 30))
+                            .font(.custom("SUIT-ExtraBold", size: 31))
                             .padding(.leading, 15)
                             .foregroundStyle(.black)
                         Text("오늘은 무엇을 해볼까요?")
-                            .font(.custom("SUIT-ExtraBold", size: 30))
+                            .font(.custom("SUIT-ExtraBold", size: 31))
                             .padding(.leading, 15)
                             .foregroundStyle(.black)
                     }
-                    .padding(.leading, 12)
+                    .padding(.leading, 15)
                     Spacer()
                 }
-                .padding(.top, 60)
+                .padding(.top, 70)
                 .padding(.bottom, 30)
                 AddTaskButtom(destinationView: Text("New"))
-                VStack(spacing: 15) {
-                    ChatRoomButton(destinationView: Text("NewRoom"), roomTitle: "모디 홍보포스터 제작")
-                    ChatRoomButton(destinationView: Text("NewRoom"), roomTitle: "모디 홍보포스터 제작")
-                    ChatRoomButton(destinationView: Text("NewRoom"), roomTitle: "모디 홍보포스터 제작")
-                    ChatRoomButton(destinationView: Text("NewRoom"), roomTitle: "모디 홍보포스터 제작")
+                VStack(spacing: 10) {
+                    ChatRoomButton(destinationView: Text("NewRoom"), roomTitle: "모디모디모디모디모디모디 홍보 포스터 제작")
+                    ChatRoomButton(destinationView: Text("NewRoom"), roomTitle: "AND 홍보 포스터 제작")
+                    ChatRoomButton(destinationView: Text("NewRoom"), roomTitle: "CommandCommand 홍보 포스터 제작")
                 }
                 
             }
@@ -40,6 +44,9 @@ struct ChatListView: View {
         .navigationBarHidden(true)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.white)
+        .onAppear(
+            
+        )
     }
 }
 

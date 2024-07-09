@@ -15,6 +15,7 @@ struct VerifyCodeInputView: View {
     var userName: String
     @State var verifyCode: String = ""
     @State private var showingBlankAlert = false
+    @Environment(\.presentationMode) var presentationMode
     @Flow var flow
     
     let fail_alert = Alert(title: "앗! 인증에 실패했어요!",
