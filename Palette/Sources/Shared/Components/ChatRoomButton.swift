@@ -1,14 +1,14 @@
 import SwiftUI
 import FlowKit
 
-struct ChatRoomButton<Content: View>: View {
+struct ChatRoomButton: View {
     @Flow var flow
-    var destinationView: Content
     var roomTitle: String
+    var roomID: Int
     
     var body: some View {
         Button(action: {
-            flow.push(destinationView)
+            flow.push(Text("Tex"))
         }) {
             ZStack {
                 Color(Color("ButtonBG"))
@@ -40,6 +40,6 @@ struct ChatRoomButton<Content: View>: View {
 
 struct ChatRoomButton_Previews: PreviewProvider {
     static var previews: some View {
-        ChatRoomButton(destinationView: Text("ChatView"), roomTitle: "번역 서비스 포스터 제작 - 매우 긴 제목 테스트입니다")
+        ChatRoomButton(roomTitle: "번역 서비스 포스터 제작 - 매우 긴 제목 테스트입니다", roomID: 1)
     }
 }
