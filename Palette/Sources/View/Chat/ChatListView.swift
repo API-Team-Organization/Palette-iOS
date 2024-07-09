@@ -94,7 +94,7 @@ struct ChatListView: View {
                 }
                 .padding(.top, 70)
                 .padding(.bottom, 30)
-                AddTaskButtom(destinationView: Text("New"))
+                AddTaskButtom(destinationView: PaletteChatView(roomTitle: "AND 포스터 제작", roomID: 1))
                 VStack(spacing: 10) {
                     ForEach(viewModel.chatRooms, id: \.id) { room in
                         ChatRoomButton(roomTitle: room.title, roomID: room.id)
