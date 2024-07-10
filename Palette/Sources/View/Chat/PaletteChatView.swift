@@ -2,28 +2,7 @@ import SwiftUI
 import Alamofire
 import FlowKit
 
-
 struct PaletteChatView: View {
-    
-//    init(roomTitleprop: String?, roomID: Int, isNewRoom: Bool) {
-//        self.roomTitleprop = roomTitleprop
-//        self.roomID = roomID
-//        self.isNewRoom = isNewRoom
-//        
-//        // JSON 인코더 설정
-//        let encoder = JSONEncoder()
-//        encoder.dateEncodingStrategy = .iso8601
-//        
-//        // JSON 디코더 설정
-//        let decoder = JSONDecoder()
-//        decoder.dateDecodingStrategy = .iso8601
-//        
-//        // Alamofire 설정
-//        let configuration = URLSessionConfiguration.default
-//        configuration.timeoutIntervalForRequest = 30 // 시간 초과 설정 (선택사항)
-//        
-//        AF.session.configuration.urlCredentialStorage = nil
-//    }
     
     let roomTitleprop: String?
     let roomID: Int
@@ -160,38 +139,39 @@ struct PaletteChatView: View {
     }
 
     func sendMessage() {
-        guard !messageText.isEmpty else { return }
+            guard !messageText.isEmpty else { return }
+            let tempMessageText = messageText
             let userMessage = ChatMessageModel(id: messages.count,
-                                               message: messageText,
+                                               message: tempMessageText,
                                                datetime: ISO8601DateFormatter().string(from: Date()),
                                                roomId: roomID,
                                                userId: 0,
                                                isAi: false,
                                                resource: .CHAT)
             messages.append(userMessage)
-        
-        let requestModel = SendMessageRequestModel(message: messageText, roomId: roomID)
-        
-        AF.request("https://paletteapp.xyz/chat",
-                   method: .post,
-                   parameters: requestModel,
-                   encoder: JSONParameterEncoder.default,
-                   headers: getHeaders())
-            .responseDecodable(of: ChatMessageResponseModel.self) { response in
-                switch response.result {
-                case .success(let chatResponse):
-                    self.messages.append(contentsOf: chatResponse.data.received)
-                case .failure(let error):
-                    print("Error: \(error.localizedDescription)")
-                    if let data = response.data, let str = String(data: data, encoding: .utf8) {
-                        print("Received data: \(str)")
+            messageText = ""
+            textEditorHeight = 40
+            
+            let requestModel = SendMessageRequestModel(message: tempMessageText, roomId: roomID)
+            
+            print(SendMessageRequestModel(message: tempMessageText, roomId: roomID))
+            AF.request("https://paletteapp.xyz/chat",
+                       method: .post,
+                       parameters: requestModel,
+                       encoder: JSONParameterEncoder.default,
+                       headers: getHeaders())
+                .responseDecodable(of: ChatMessageResponseModel.self) { response in
+                    switch response.result {
+                    case .success(let chatResponse):
+                        self.messages.append(contentsOf: chatResponse.data.received)
+                    case .failure(let error):
+                        print("Error: \(error.localizedDescription)")
+                        if let data = response.data, let str = String(data: data, encoding: .utf8) {
+                            print("Received data: \(str)")
+                        }
                     }
                 }
-            }
-        
-        messageText = ""
-        textEditorHeight = 40
-    }
+        }
     
     private func updateRoomTitle() async {
         let url = "https://paletteapp.xyz/room/title"
