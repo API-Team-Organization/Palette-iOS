@@ -13,6 +13,7 @@ struct PaletteChatView: View {
     @State private var messages: [ChatMessageModel] = []
     @State private var textEditorHeight: CGFloat = 40
     @State private var showingRoomTitleAlert = false
+    @State private var isLoadingResponse = false
     @Environment(\.presentationMode) var presentationMode
     let update_alert = Alert(title: "방 제목 설정 실패",
                       message: "채팅방 제목 설정에 실패했습니다.",
@@ -50,6 +51,16 @@ struct PaletteChatView: View {
                 LazyVStack(alignment: .leading, spacing: 10) {
                     ForEach(messages) { message in
                         MessageBubble(message: message)
+                    }
+                    if isLoadingResponse {
+                        HStack {
+                            ProgressView()
+                                .frame(maxWidth: 200, maxHeight: 200)
+                                .background(Color.gray.opacity(0.2))
+                                .cornerRadius(13)
+                            Spacer()
+                        }
+                        .padding(.vertical, 4)
                     }
                 }
                 .padding()
@@ -139,39 +150,42 @@ struct PaletteChatView: View {
     }
 
     func sendMessage() {
-            guard !messageText.isEmpty else { return }
-            let tempMessageText = messageText
-            let userMessage = ChatMessageModel(id: messages.count,
-                                               message: tempMessageText,
-                                               datetime: ISO8601DateFormatter().string(from: Date()),
-                                               roomId: roomID,
-                                               userId: 0,
-                                               isAi: false,
-                                               resource: .CHAT)
-            messages.append(userMessage)
-            messageText = ""
-            textEditorHeight = 40
-            
-            let requestModel = SendMessageRequestModel(message: tempMessageText, roomId: roomID)
-            
-            print(SendMessageRequestModel(message: tempMessageText, roomId: roomID))
-            AF.request("https://paletteapp.xyz/chat",
-                       method: .post,
-                       parameters: requestModel,
-                       encoder: JSONParameterEncoder.default,
-                       headers: getHeaders())
-                .responseDecodable(of: ChatMessageResponseModel.self) { response in
-                    switch response.result {
-                    case .success(let chatResponse):
-                        self.messages.append(contentsOf: chatResponse.data.received)
-                    case .failure(let error):
-                        print("Error: \(error.localizedDescription)")
-                        if let data = response.data, let str = String(data: data, encoding: .utf8) {
-                            print("Received data: \(str)")
-                        }
+        guard !messageText.isEmpty else { return }
+        
+        let userMessage = ChatMessageModel(id: messages.count,
+                                           message: messageText,
+                                           datetime: ISO8601DateFormatter().string(from: Date()),
+                                           roomId: roomID,
+                                           userId: 0,
+                                           isAi: false,
+                                           resource: .CHAT)
+        messages.append(userMessage)
+        
+        let requestModel = SendMessageRequestModel(message: messageText, roomId: roomID)
+        
+        isLoadingResponse = true
+
+        AF.request("https://paletteapp.xyz/chat",
+                   method: .post,
+                   parameters: requestModel,
+                   encoder: JSONParameterEncoder.default,
+                   headers: getHeaders())
+            .responseDecodable(of: ChatMessageResponseModel.self) { response in
+                switch response.result {
+                case .success(let chatResponse):
+                    self.messages.append(contentsOf: chatResponse.data.received)
+                case .failure(let error):
+                    print("Error: \(error.localizedDescription)")
+                    if let data = response.data, let str = String(data: data, encoding: .utf8) {
+                        print("Received data: \(str)")
                     }
                 }
-        }
+                isLoadingResponse = false
+            }
+        
+        messageText = ""
+        textEditorHeight = 40
+    }
     
     private func updateRoomTitle() async {
         let url = "https://paletteapp.xyz/room/title"
