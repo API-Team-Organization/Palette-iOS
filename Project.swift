@@ -40,11 +40,8 @@ let project = Project(
             sources: ["Palette/Sources/**"],
             resources: ["Palette/Resources/**"],
             dependencies: [
-                .external(name: "LDSwiftEventSource"),
                 .external(name: "Alamofire"),
                 .external(name: "RiveRuntime"),
-                .external(name: "Realm"),
-                .external(name: "SocketIO"),
                 .external(name: "Kingfisher"),
                 .external(name: "FlowKit"),
                 .external(name: "SkeletonUI"),

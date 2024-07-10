@@ -28,24 +28,6 @@
       }
     },
     {
-      "identity" : "realm-core",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/realm/realm-core.git",
-      "state" : {
-        "revision" : "9cf7ef4ad8e2f4c7a519c9a395ca3d253bb87aa8",
-        "version" : "14.6.2"
-      }
-    },
-    {
-      "identity" : "realm-swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/realm/realm-swift",
-      "state" : {
-        "revision" : "2000569f03948c281afc83c36c710ab15e5dd33c",
-        "version" : "10.50.0"
-      }
-    },
-    {
       "identity" : "rive-ios",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/rive-app/rive-ios",
@@ -61,33 +43,6 @@
       "state" : {
         "branch" : "master",
         "revision" : "f025e9ba5d051374d7344efa8859df5b9399a181"
-      }
-    },
-    {
-      "identity" : "socket.io-client-swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/socketio/socket.io-client-swift",
-      "state" : {
-        "revision" : "175da8b5156f6b132436f0676cc84c2f6a766b6e",
-        "version" : "16.1.0"
-      }
-    },
-    {
-      "identity" : "starscream",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/daltoniam/Starscream",
-      "state" : {
-        "revision" : "ac6c0fc9da221873e01bd1a0d4818498a71eef33",
-        "version" : "4.0.6"
-      }
-    },
-    {
-      "identity" : "swift-eventsource",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/LaunchDarkly/swift-eventsource",
-      "state" : {
-        "revision" : "57051701c58a93603ffa2051f8e9cf0c8cff7814",
-        "version" : "3.3.0"
       }
     },
     {
