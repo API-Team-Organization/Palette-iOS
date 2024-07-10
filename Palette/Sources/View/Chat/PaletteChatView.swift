@@ -29,6 +29,7 @@ struct PaletteChatView: View {
                 }) {
                     Image(systemName: "chevron.left")
                         .foregroundColor(.black)
+                        .font(.system(size: 15))
                 }
                 .padding(.leading)
                 
@@ -116,6 +117,7 @@ struct PaletteChatView: View {
                 }
             }
             .padding(.horizontal)
+            .padding(.top, 5)
             .padding(.bottom, 20)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
