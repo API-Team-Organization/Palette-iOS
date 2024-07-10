@@ -44,7 +44,7 @@ struct ChatRoomButton: View {
                 onDelete(roomID)
                 flow.alert(del_alert)
             } label: {
-                Label("채팅방 삭제", systemImage: "trash")
+                Label("채팅방 삭제하기", systemImage: "trash")
             }
         }
     }

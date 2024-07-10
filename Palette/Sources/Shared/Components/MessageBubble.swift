@@ -47,7 +47,7 @@ struct MessageBubble: View {
                                 flow.alert(success_alert, animated: true)
                             }
                         }) {
-                            Text("사진첩에 저장")
+                            Text("갤러리에 저장하기")
                             Image(systemName: "square.and.arrow.down")
                         }
                     }
@@ -69,7 +69,7 @@ struct MessageBubble: View {
                         Button(action: {
                             UIPasteboard.general.string = message.message
                         }) {
-                            Text("복사")
+                            Text("텍스트 복사하기")
                             Image(systemName: "doc.on.doc")
                         }
                     }
