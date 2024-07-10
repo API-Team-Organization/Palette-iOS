@@ -16,8 +16,8 @@ struct PaletteChatView: View {
     @State private var isLoadingResponse = false
     @Environment(\.presentationMode) var presentationMode
     let update_alert = Alert(title: "방 제목 설정 실패",
-                      message: "채팅방 제목 설정에 실패했습니다.",
-                      dismissButton: .default("확인"))
+                             message: "채팅방 제목 설정에 실패했습니다.",
+                             dismissButton: .default("확인"))
     @Flow var flow
     
     var body: some View {
@@ -46,24 +46,36 @@ struct PaletteChatView: View {
             }
             .padding()
             
-
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 10) {
-                    ForEach(messages) { message in
-                        MessageBubble(message: message)
-                    }
-                    if isLoadingResponse {
-                        HStack {
-                            ProgressView()
-                                .frame(maxWidth: 200, maxHeight: 200)
-                                .background(Color.gray.opacity(0.2))
-                                .cornerRadius(13)
-                            Spacer()
+            ScrollViewReader { scrollViewProxy in
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 10) {
+                        ForEach(messages) { message in
+                            MessageBubble(message: message)
+                                .id(message.id)
                         }
-                        .padding(.vertical, 4)
+                        if isLoadingResponse {
+                            HStack {
+                                ProgressView()
+                                    .frame(maxWidth: 200, maxHeight: 200)
+                                    .background(Color.gray.opacity(0.2))
+                                    .cornerRadius(13)
+                                Spacer()
+                            }
+                            .padding(.vertical, 4)
+                        }
+                    }
+                    .padding()
+                    .onChange(of: messages) { _ in
+                        withAnimation {
+                            scrollViewProxy.scrollTo(messages.last?.id, anchor: .bottom)
+                        }
                     }
                 }
-                .padding()
+                .onAppear {
+                    withAnimation {
+                        scrollViewProxy.scrollTo(messages.last?.id, anchor: .bottom)
+                    }
+                }
             }
             
             // 메시지 입력 영역
@@ -105,7 +117,6 @@ struct PaletteChatView: View {
             }
             .padding(.horizontal)
             .padding(.bottom, 20)
-
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.white)
