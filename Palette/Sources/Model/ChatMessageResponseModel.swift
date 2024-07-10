@@ -16,9 +16,3 @@ struct ChatMessageResponseModel: Codable {
 struct ChatMessageResponseData: Codable {
     let received: [ChatMessageModel]
 }
-
-struct ChatHistoryResponse: Codable {
-    let code: Int
-    let message: String
-    let data: [ChatMessageModel]
-}

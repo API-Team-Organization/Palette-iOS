@@ -220,12 +220,6 @@ struct PaletteChatView: View {
             }
     }
     
-    struct ChatHistoryResponse: Codable {
-        let code: Int
-        let message: String
-        let data: [ChatMessageModel]
-    }
-
     private func loadChatMessages() {
         AF.request("https://paletteapp.xyz/chat/\(roomID)", method: .get, headers: getHeaders())
             .responseDecodable(of: ChatHistoryResponse.self) { response in
