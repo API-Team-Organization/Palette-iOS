@@ -8,10 +8,10 @@ struct ChatRoomButton: View {
     
     var body: some View {
         Button(action: {
-            flow.push(Text("Tex"))
+            flow.push(PaletteChatView(roomTitleprop: roomTitle, roomID: roomID, isNewRoom: false))
         }) {
             ZStack {
-                Color(Color("ButtonBG"))
+                Color("ButtonBG")
                 HStack {
                     Image("PaletteLogo")
                         .resizable()
@@ -35,11 +35,5 @@ struct ChatRoomButton: View {
             .frame(width: 340, height: 110)
             .clipShape(RoundedRectangle(cornerRadius: 17, style: .continuous))
         }
-    }
-}
-
-struct ChatRoomButton_Previews: PreviewProvider {
-    static var previews: some View {
-        ChatRoomButton(roomTitle: "번역 서비스 포스터 제작 - 매우 긴 제목 테스트입니다", roomID: 1)
     }
 }

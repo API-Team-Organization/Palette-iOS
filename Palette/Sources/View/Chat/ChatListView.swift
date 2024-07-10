@@ -46,10 +46,30 @@ class ChatRoomViewModel: ObservableObject {
     }
 }
 
+//func createNewChatRoom() {
+//        let url = "https://paletteapp.xyz/room/create"
+//
+//        AF.request(url, method: .post, parameters: parameters, encoding: JSONEncoding.default, headers: getHeaders())
+//            .responseDecodable(of: CreateRoomResponseModel.self) { response in
+//                switch response.result {
+//                case .success(let createRoomResponse):
+//                    DispatchQueue.main.async {
+//                        self.flow.push(PaletteChatView(roomTitle: self.newRoomTitle, roomID: createRoomResponse.data.id))
+//                        self.viewModel.getChatRoomData() // 채팅방 목록 새로고침
+//                    }
+//                case .failure(let error):
+//                    print("Error creating room: \(error.localizedDescription)")
+//                }
+//            }
+//    }
+
+
 struct ChatListView: View {
-    
     @State var uName: String = "유저"
     @StateObject private var viewModel = ChatRoomViewModel()
+    @State private var showingNewChatView = false
+    @State private var newRoomID: Int?
+    @Flow var flow
     
     func getProfileData() async {
         let url = "https://paletteapp.xyz/info/me"
@@ -75,46 +95,63 @@ struct ChatListView: View {
             }
     }
     
+        func createNewChatRoom() {
+            let url = "https://paletteapp.xyz/room"
+            let decoder = JSONDecoder()
+    
+            AF.request(url, method: .post, headers: getHeaders())
+                .responseDecodable(of: CreateRoomResponseModel<CreateRoomModel>.self, decoder: decoder) { response in
+                    switch response.result {
+                    case .success(let createRoomResponse):
+                        DispatchQueue.main.async {
+                            debugPrint("Success")
+                            flow.push(PaletteChatView(roomTitleprop: "새 채팅방 이름", roomID: createRoomResponse.data.id, isNewRoom: true))
+                        }
+                    case .failure(let error):
+                        print("Error creating room: \(error.localizedDescription)")
+                    }
+                }
+        }
+    
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack {
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text("\(uName)님!")
-                            .font(.custom("SUIT-ExtraBold", size: 31))
-                            .padding(.leading, 15)
-                            .foregroundStyle(.black)
-                        Text("오늘은 무엇을 해볼까요?")
-                            .font(.custom("SUIT-ExtraBold", size: 31))
-                            .padding(.leading, 15)
-                            .foregroundStyle(.black)
+                VStack {
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text("\(uName)님!")
+                                .font(.custom("SUIT-ExtraBold", size: 31))
+                                .padding(.leading, 15)
+                                .foregroundStyle(.black)
+                            Text("오늘은 무엇을 해볼까요?")
+                                .font(.custom("SUIT-ExtraBold", size: 31))
+                                .padding(.leading, 15)
+                                .foregroundStyle(.black)
+                        }
+                        .padding(.leading, 15)
+                        Spacer()
                     }
-                    .padding(.leading, 15)
-                    Spacer()
-                }
-                .padding(.top, 70)
-                .padding(.bottom, 30)
-                AddTaskButtom(destinationView: PaletteChatView(roomTitle: "AND 포스터 제작", roomID: 1))
-                VStack(spacing: 10) {
-                    ForEach(viewModel.chatRooms, id: \.id) { room in
-                        ChatRoomButton(roomTitle: room.title, roomID: room.id)
+                    .padding(.top, 70)
+                    .padding(.bottom, 30)
+                    AddChatButton(action: createNewChatRoom)
+                    
+                    VStack(spacing: 10) {
+                        ForEach(viewModel.chatRooms, id: \.id) { room in
+                            ChatRoomButton(roomTitle: room.title, roomID: room.id)
+                        }
                     }
+                    .padding(.bottom, 50)
                 }
-                
             }
-        }
-        .navigationBarHidden(true)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.white)
-        .onAppear {
-            Task {
-                await getProfileData()
-                viewModel.getChatRoomData()
+            .navigationBarHidden(true)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.white)
+            .onAppear {
+                Task {
+                    await getProfileData()
+                    viewModel.getChatRoomData()
+                }
             }
         }
     }
-}
-
-#Preview {
-    ChatListView()
 }
