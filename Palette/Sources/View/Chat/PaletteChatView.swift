@@ -4,6 +4,27 @@ import FlowKit
 
 
 struct PaletteChatView: View {
+    
+//    init(roomTitleprop: String?, roomID: Int, isNewRoom: Bool) {
+//        self.roomTitleprop = roomTitleprop
+//        self.roomID = roomID
+//        self.isNewRoom = isNewRoom
+//        
+//        // JSON 인코더 설정
+//        let encoder = JSONEncoder()
+//        encoder.dateEncodingStrategy = .iso8601
+//        
+//        // JSON 디코더 설정
+//        let decoder = JSONDecoder()
+//        decoder.dateDecodingStrategy = .iso8601
+//        
+//        // Alamofire 설정
+//        let configuration = URLSessionConfiguration.default
+//        configuration.timeoutIntervalForRequest = 30 // 시간 초과 설정 (선택사항)
+//        
+//        AF.session.configuration.urlCredentialStorage = nil
+//    }
+    
     let roomTitleprop: String?
     let roomID: Int
     let isNewRoom: Bool
@@ -93,7 +114,7 @@ struct PaletteChatView: View {
                 }
             }
             .padding(.horizontal)
-            .padding(.bottom, 10)
+            .padding(.bottom, 20)
 
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -105,6 +126,7 @@ struct PaletteChatView: View {
             } else {
                 roomTitle = roomTitleprop ?? "새 채팅방 이름"
             }
+            loadChatMessages()
         }
         .alert("채팅방 이름 입력", isPresented: $showingRoomTitleAlert) {
             TextField("채팅방 이름", text: $roomTitle)
@@ -116,7 +138,21 @@ struct PaletteChatView: View {
         }
     }
     
-
+    func getHeaders() -> HTTPHeaders {
+        let token: String
+        if let tokenData = KeychainManager.load(key: "accessToken"),
+           let tokenString = String(data: tokenData, encoding: .utf8) {
+            token = tokenString
+        } else {
+            token = ""
+        }
+        
+        let headers: HTTPHeaders = [
+            "x-auth-token": token
+        ]
+        return headers
+    }
+    
     private func updateTextEditorHeight() {
         let newSize = CGSize(width: UIScreen.main.bounds.width - 100, height: .infinity)
         let newHeight = messageText.heightWithConstrainedWidth(width: newSize.width, font: UIFont(name: "SUIT-Medium", size: 15) ?? .systemFont(ofSize: 15))
@@ -125,12 +161,36 @@ struct PaletteChatView: View {
 
     func sendMessage() {
         guard !messageText.isEmpty else { return }
-//        let newMessage = ChatMessage(content: messageText, isUser: true)
-//        messages.append(newMessage)
-        messageText = ""
-        textEditorHeight = 40 // 메시지 전송 후 높이 초기화
+            let userMessage = ChatMessageModel(id: messages.count,
+                                               message: messageText,
+                                               datetime: ISO8601DateFormatter().string(from: Date()),
+                                               roomId: roomID,
+                                               userId: 0,
+                                               isAi: false,
+                                               resource: .CHAT)
+            messages.append(userMessage)
         
-        // TODO: 서버로 메시지 전송 로직 구현
+        let requestModel = SendMessageRequestModel(message: messageText, roomId: roomID)
+        
+        AF.request("https://paletteapp.xyz/chat",
+                   method: .post,
+                   parameters: requestModel,
+                   encoder: JSONParameterEncoder.default,
+                   headers: getHeaders())
+            .responseDecodable(of: ChatMessageResponseModel.self) { response in
+                switch response.result {
+                case .success(let chatResponse):
+                    self.messages.append(contentsOf: chatResponse.data.received)
+                case .failure(let error):
+                    print("Error: \(error.localizedDescription)")
+                    if let data = response.data, let str = String(data: data, encoding: .utf8) {
+                        print("Received data: \(str)")
+                    }
+                }
+            }
+        
+        messageText = ""
+        textEditorHeight = 40
     }
     
     private func updateRoomTitle() async {
@@ -151,6 +211,36 @@ struct PaletteChatView: View {
                 case .failure(let error):
                     flow.alert(update_alert)
                     print("오류:", error.localizedDescription)
+                }
+            }
+    }
+    
+    struct ChatHistoryResponse: Codable {
+        let code: Int
+        let message: String
+        let data: [ChatMessageModel]
+    }
+
+    private func loadChatMessages() {
+        AF.request("https://paletteapp.xyz/chat/\(roomID)", method: .get, headers: getHeaders())
+            .responseDecodable(of: ChatHistoryResponse.self) { response in
+                switch response.result {
+                case .success(let chatHistory):
+                    self.messages = chatHistory.data
+                case .failure(let error):
+                    print("Error loading chat history: \(error.localizedDescription)")
+                    if let data = response.data, let str = String(data: data, encoding: .utf8) {
+                        print("Received data: \(str)")
+                        // 수동으로 디코딩 시도
+                        if let jsonData = str.data(using: .utf8) {
+                            do {
+                                let chatHistory = try JSONDecoder().decode(ChatHistoryResponse.self, from: jsonData)
+                                self.messages = chatHistory.data
+                            } catch {
+                                print("Manual decoding failed: \(error)")
+                            }
+                        }
+                    }
                 }
             }
     }

@@ -7,8 +7,18 @@
 
 import Foundation
 
-struct ChatMessageResponseModel<T: Codable>: Codable {
-    let id: Int
+struct ChatMessageResponseModel: Codable {
+    let code: Int
     let message: String
-    let data: [T]
+    let data: ChatMessageResponseData
+}
+
+struct ChatMessageResponseData: Codable {
+    let received: [ChatMessageModel]
+}
+
+struct ChatHistoryResponse: Codable {
+    let code: Int
+    let message: String
+    let data: [ChatMessageModel]
 }
