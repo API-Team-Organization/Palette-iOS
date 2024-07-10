@@ -12,6 +12,7 @@ let project = Project(
                 with: [
                     "CFBundleDisplayName": "Palette",
                     "UISupportedInterfaceOrientations": ["UIInterfaceOrientationPortrait"],
+                    "NSPhotoLibraryAddUsageDescription": "생성된 포스터를 사용자의 갤러리에 저장하기 위한 권한입니다.",
                     "NSAppTransportSecurity": ["NSAllowsArbitraryLoads": true],
                     "UILaunchStoryboardName": "LaunchScreen.storyboard",
                     "UIAppFonts": [

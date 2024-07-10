@@ -4,11 +4,9 @@
 //
 //  Created by 4rNe5 on 6/20/24.
 //
-
 import SwiftUI
 import Alamofire
 import FlowKit
-
 
 func getHeaders() -> HTTPHeaders {
     let token: String
@@ -44,25 +42,23 @@ class ChatRoomViewModel: ObservableObject {
                 }
             }
     }
+    
+    func deleteChatRoom(roomID: Int) {
+        let url = "https://paletteapp.xyz/room/\(roomID)"
+        
+        AF.request(url, method: .delete, headers: getHeaders())
+            .response { [weak self] response in
+                switch response.result {
+                case .success:
+                    DispatchQueue.main.async {
+                        self?.getChatRoomData() // 채팅방 목록 새로고침
+                    }
+                case .failure(let error):
+                    print("Error deleting room: \(error.localizedDescription)")
+                }
+            }
+    }
 }
-
-//func createNewChatRoom() {
-//        let url = "https://paletteapp.xyz/room/create"
-//
-//        AF.request(url, method: .post, parameters: parameters, encoding: JSONEncoding.default, headers: getHeaders())
-//            .responseDecodable(of: CreateRoomResponseModel.self) { response in
-//                switch response.result {
-//                case .success(let createRoomResponse):
-//                    DispatchQueue.main.async {
-//                        self.flow.push(PaletteChatView(roomTitle: self.newRoomTitle, roomID: createRoomResponse.data.id))
-//                        self.viewModel.getChatRoomData() // 채팅방 목록 새로고침
-//                    }
-//                case .failure(let error):
-//                    print("Error creating room: \(error.localizedDescription)")
-//                }
-//            }
-//    }
-
 
 struct ChatListView: View {
     @State var uName: String = "유저"
@@ -95,23 +91,23 @@ struct ChatListView: View {
             }
     }
     
-        func createNewChatRoom() {
-            let url = "https://paletteapp.xyz/room"
-            let decoder = JSONDecoder()
-    
-            AF.request(url, method: .post, headers: getHeaders())
-                .responseDecodable(of: CreateRoomResponseModel<CreateRoomModel>.self, decoder: decoder) { response in
-                    switch response.result {
-                    case .success(let createRoomResponse):
-                        DispatchQueue.main.async {
-                            debugPrint("Success")
-                            flow.push(PaletteChatView(roomTitleprop: "새 채팅방 이름", roomID: createRoomResponse.data.id, isNewRoom: true))
-                        }
-                    case .failure(let error):
-                        print("Error creating room: \(error.localizedDescription)")
+    func createNewChatRoom() {
+        let url = "https://paletteapp.xyz/room"
+        let decoder = JSONDecoder()
+        
+        AF.request(url, method: .post, headers: getHeaders())
+            .responseDecodable(of: CreateRoomResponseModel<CreateRoomModel>.self, decoder: decoder) { response in
+                switch response.result {
+                case .success(let createRoomResponse):
+                    DispatchQueue.main.async {
+                        debugPrint("Success")
+                        flow.push(PaletteChatView(roomTitleprop: "새 채팅방 이름", roomID: createRoomResponse.data.id, isNewRoom: true))
                     }
+                case .failure(let error):
+                    print("Error creating room: \(error.localizedDescription)")
                 }
-        }
+            }
+    }
     
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -131,13 +127,15 @@ struct ChatListView: View {
                         .padding(.leading, 15)
                         Spacer()
                     }
-                    .padding(.top, 70)
+                    .padding(.top, 60)
                     .padding(.bottom, 30)
                     AddChatButton(action: createNewChatRoom)
                     
                     VStack(spacing: 10) {
                         ForEach(viewModel.chatRooms, id: \.id) { room in
-                            ChatRoomButton(roomTitle: room.title, roomID: room.id)
+                            ChatRoomButton(roomTitle: room.title, roomID: room.id, onDelete: { roomID in
+                                viewModel.deleteChatRoom(roomID: roomID)
+                            })
                         }
                     }
                     .padding(.bottom, 50)
