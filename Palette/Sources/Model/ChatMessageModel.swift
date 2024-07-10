@@ -15,8 +15,9 @@ struct ChatMessageModel: Codable, Identifiable {
     }
     
     var date: Date {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withFullDate, .withTime, .withDashSeparatorInDate, .withColonSeparatorInTime]
-        return formatter.date(from: datetime) ?? Date()
-    }
-}
+           let formatter = ISO8601DateFormatter()
+           formatter.formatOptions = [.withFullDate, .withTime, .withDashSeparatorInDate, .withColonSeparatorInTime]
+           formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
+           return formatter.date(from: datetime) ?? Date()
+       }
+   }

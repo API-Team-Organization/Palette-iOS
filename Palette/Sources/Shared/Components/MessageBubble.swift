@@ -11,8 +11,10 @@ struct MessageBubble: View {
                       dismissButton: .default("확인"))
     
     private var formattedTime: String {
+        print(message.date)
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ko_KR")
+        formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
         formatter.dateFormat = "a h:mm"
         return formatter.string(from: message.date)
     }
