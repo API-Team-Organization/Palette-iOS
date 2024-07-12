@@ -172,7 +172,9 @@ struct PaletteChatView: View {
                                            userId: 0,
                                            isAi: false,
                                            resource: .CHAT)
-        messages.append(userMessage)
+        DispatchQueue.main.async {
+            self.messages.append(userMessage)
+        }
         
         let requestModel = SendMessageRequestModel(message: messageText, roomId: roomID)
         
@@ -184,16 +186,18 @@ struct PaletteChatView: View {
                    encoder: JSONParameterEncoder.default,
                    headers: getHeaders())
             .responseDecodable(of: ChatMessageResponseModel.self) { response in
-                switch response.result {
-                case .success(let chatResponse):
-                    self.messages.append(contentsOf: chatResponse.data.received)
-                case .failure(let error):
-                    print("Error: \(error.localizedDescription)")
-                    if let data = response.data, let str = String(data: data, encoding: .utf8) {
-                        print("Received data: \(str)")
+                DispatchQueue.main.async {
+                    switch response.result {
+                    case .success(let chatResponse):
+                        self.messages.append(contentsOf: chatResponse.data.received)
+                    case .failure(let error):
+                        print("Error: \(error.localizedDescription)")
+                        if let data = response.data, let str = String(data: data, encoding: .utf8) {
+                            print("Received data: \(str)")
+                        }
                     }
+                    self.isLoadingResponse = false
                 }
-                isLoadingResponse = false
             }
         
         messageText = ""

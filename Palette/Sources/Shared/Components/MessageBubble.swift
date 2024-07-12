@@ -40,6 +40,18 @@ struct MessageBubble: View {
                     .scaledToFit()
                     .frame(maxWidth: 200, maxHeight: 200)
                     .cornerRadius(13)
+                    .onAppear {
+                        KingfisherManager.shared.retrieveImage(with: URL(string: message.message)!) { result in
+                            switch result {
+                            case .success(let value):
+                                DispatchQueue.main.async {
+                                    self.image = value.image
+                                }
+                            case .failure:
+                                break
+                            }
+                        }
+                    }
                     .contextMenu {
                         Button(action: {
                             if let image = self.image {
@@ -49,16 +61,6 @@ struct MessageBubble: View {
                         }) {
                             Text("갤러리에 저장하기")
                             Image(systemName: "square.and.arrow.down")
-                        }
-                    }
-                    .onAppear {
-                        KingfisherManager.shared.retrieveImage(with: URL(string: message.message)!) { result in
-                            switch result {
-                            case .success(let value):
-                                self.image = value.image
-                            case .failure:
-                                break
-                            }
                         }
                     }
             } else {
