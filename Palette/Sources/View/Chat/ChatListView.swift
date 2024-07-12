@@ -119,7 +119,7 @@ struct ChatListView: View {
                                 .font(.custom("SUIT-ExtraBold", size: 31))
                                 .padding(.leading, 15)
                                 .foregroundStyle(.black)
-                            Text("오늘은 무엇을 해볼까요?")
+                            Text("오늘은 뭘 작업해볼까요?")
                                 .font(.custom("SUIT-ExtraBold", size: 31))
                                 .padding(.leading, 15)
                                 .foregroundStyle(.black)
