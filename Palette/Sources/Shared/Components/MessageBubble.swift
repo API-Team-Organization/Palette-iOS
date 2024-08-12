@@ -5,11 +5,12 @@ import FlowKit
 struct MessageBubble: View {
     let message: ChatMessageModel
     @State private var image: UIImage?
+    @State private var isFullScreenPresented = false
     @Flow var flow
     let success_alert = Alert(title: "이미지 저장 완료!",
                       message: "이미지가 사진첩에 저장되었어요!",
                       dismissButton: .default("확인"))
-
+    
     private var formattedTime: String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ko_KR")
@@ -17,7 +18,7 @@ struct MessageBubble: View {
         formatter.dateFormat = "a h:mm"
         return formatter.string(from: message.date)
     }
-
+    
     var body: some View {
         HStack(alignment: .bottom, spacing: 8) {
             if message.isAi {
@@ -31,7 +32,7 @@ struct MessageBubble: View {
         }
         .padding(.vertical, 4)
     }
-
+    
     private var messageContent: some View {
         Group {
             if message.resource == .IMAGE {
@@ -40,6 +41,9 @@ struct MessageBubble: View {
                     .scaledToFit()
                     .frame(maxWidth: 200, maxHeight: 200)
                     .cornerRadius(13)
+                    .onTapGesture {
+                        isFullScreenPresented = true
+                    }
                     .onAppear {
                         KingfisherManager.shared.retrieveImage(with: URL(string: message.message)!) { result in
                             switch result {
@@ -63,6 +67,9 @@ struct MessageBubble: View {
                             Image(systemName: "square.and.arrow.down")
                         }
                     }
+                    .sheet(isPresented: $isFullScreenPresented) {
+                        FullScreenImageView(image: image, isPresented: $isFullScreenPresented)
+                    }
             } else {
                 Text(message.message)
                     .font(.custom("SUIT-Medium", size: 14))
@@ -81,10 +88,33 @@ struct MessageBubble: View {
         .foregroundColor(message.isAi ? .black : .white)
         .cornerRadius(13)
     }
-
+    
     private var timeText: some View {
         Text(formattedTime)
             .font(.custom("SUIT-Regular", size: 11))
             .foregroundColor(.gray)
+    }
+}
+
+struct FullScreenImageView: View {
+    let image: UIImage?
+    @Binding var isPresented: Bool
+    
+    var body: some View {
+        NavigationView {
+            Group {
+                if let image = image {
+                    Image(uiImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .edgesIgnoringSafeArea(.all)
+                } else {
+                    Text("이미지를 불러올 수 없습니다.")
+                }
+            }
+            .navigationBarItems(trailing: Button("닫기") {
+                isPresented = false
+            })
+        }
     }
 }

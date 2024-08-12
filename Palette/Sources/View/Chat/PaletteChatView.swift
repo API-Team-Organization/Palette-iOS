@@ -14,8 +14,12 @@ struct PaletteChatView: View {
     @State private var textEditorHeight: CGFloat = 40
     @State private var showingRoomTitleAlert = false
     @State private var isLoadingResponse = false
+    @State private var isMessageValid = false
     @Environment(\.presentationMode) var presentationMode
     let update_alert = Alert(title: "방 제목 설정 실패",
+                             message: "채팅방 제목 설정에 실패했습니다.",
+                             dismissButton: .default("확인"))
+    let chatblank_alert = Alert(title: "방 제목 설정 실패",
                              message: "채팅방 제목 설정에 실패했습니다.",
                              dismissButton: .default("확인"))
     @Flow var flow
@@ -108,13 +112,20 @@ struct PaletteChatView: View {
                     }
                 }
                 
-                Button(action: sendMessage) {
+                Button(action: {
+                    if isMessageValid {
+                        sendMessage()
+                    } else {
+                        flow.alert(chatblank_alert)
+                    }
+                }) {
                     Image(systemName: "paperplane.fill")
-                        .foregroundColor(Color("AccentColor"))
+                        .foregroundColor(isMessageValid ? Color("AccentColor") : Color.gray)
                         .padding(10)
                         .background(Color("ChatTextFieldBack"))
                         .clipShape(Circle())
                 }
+                .disabled(!isMessageValid)
             }
             .padding(.horizontal)
             .padding(.top, 5)
@@ -160,10 +171,13 @@ struct PaletteChatView: View {
         let newSize = CGSize(width: UIScreen.main.bounds.width - 100, height: .infinity)
         let newHeight = messageText.heightWithConstrainedWidth(width: newSize.width, font: UIFont(name: "SUIT-Medium", size: 15) ?? .systemFont(ofSize: 15))
         textEditorHeight = min(max(40, newHeight + 20), 120) // 최소 40, 최대 120
+        
+        // 메시지 유효성 검사
+        isMessageValid = !messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     func sendMessage() {
-        guard !messageText.isEmpty else { return }
+        guard isMessageValid else { return }
         
         let userMessage = ChatMessageModel(id: messages.count,
                                            message: messageText,
@@ -202,6 +216,7 @@ struct PaletteChatView: View {
         
         messageText = ""
         textEditorHeight = 40
+        isMessageValid = false
     }
     
     private func updateRoomTitle() async {
