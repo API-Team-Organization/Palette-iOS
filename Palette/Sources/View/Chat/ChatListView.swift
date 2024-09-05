@@ -68,7 +68,7 @@ struct ChatListView: View {
     @Flow var flow
     
     func getProfileData() async {
-        let url = "https://paletteapp.xyz/info/me"
+        let url = "https://paletteapp.xyz/backend/info/me"
         
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
@@ -92,7 +92,7 @@ struct ChatListView: View {
     }
     
     func createNewChatRoom() {
-        let url = "https://paletteapp.xyz/room"
+        let url = "https://paletteapp.xyz/backend/room"
         let decoder = JSONDecoder()
         
         AF.request(url, method: .post, headers: getHeaders())
