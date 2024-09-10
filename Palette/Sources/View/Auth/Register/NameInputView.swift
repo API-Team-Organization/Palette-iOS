@@ -59,6 +59,7 @@ struct NameInputView: View {
                         }
                     } else {
                         print("No token found in response headers")
+                        print(response)
                         flow.alert(fail_alert)
                     }
                 case .failure(let error):

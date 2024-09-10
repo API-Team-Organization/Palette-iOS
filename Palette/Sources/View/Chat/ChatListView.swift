@@ -7,6 +7,8 @@
 import SwiftUI
 import Alamofire
 import FlowKit
+import Combine
+
 
 func getHeaders() -> HTTPHeaders {
     let token: String
@@ -16,7 +18,7 @@ func getHeaders() -> HTTPHeaders {
     } else {
         token = ""
     }
-    
+
     let headers: HTTPHeaders = [
         "x-auth-token": token
     ]
@@ -25,12 +27,13 @@ func getHeaders() -> HTTPHeaders {
 
 class ChatRoomViewModel: ObservableObject {
     @Published var chatRooms: [ChatRoomModel] = []
-    
+
     func getChatRoomData() {
         let url = "https://paletteapp.xyz/room/list"
         let decoder = JSONDecoder()
-        
+
         AF.request(url, method: .get, headers: getHeaders())
+            .validate(statusCode: 200..<300) // Add validation to ensure the response is valid
             .responseDecodable(of: ChatRoomResponseModel<ChatRoomModel>.self, decoder: decoder) { [weak self] response in
                 switch response.result {
                 case .success(let chatRoomResponse):
@@ -39,22 +42,29 @@ class ChatRoomViewModel: ObservableObject {
                     }
                 case .failure(let error):
                     print("Error: \(error.localizedDescription)")
+                    if let data = response.data, let str = String(data: data, encoding: .utf8) {
+                        print("Raw response: \(str)")
+                    }
                 }
             }
     }
-    
+
     func deleteChatRoom(roomID: Int) {
         let url = "https://paletteapp.xyz/room/\(roomID)"
-        
+
         AF.request(url, method: .delete, headers: getHeaders())
+            .validate(statusCode: 200..<300) // Add validation to ensure the response is valid
             .response { [weak self] response in
                 switch response.result {
                 case .success:
                     DispatchQueue.main.async {
-                        self?.getChatRoomData() // 채팅방 목록 새로고침
+                        self?.getChatRoomData() // Refresh chat room list
                     }
                 case .failure(let error):
                     print("Error deleting room: \(error.localizedDescription)")
+                    if let data = response.data, let str = String(data: data, encoding: .utf8) {
+                        print("Raw response: \(str)")
+                    }
                 }
             }
     }
@@ -66,17 +76,18 @@ struct ChatListView: View {
     @State private var showingNewChatView = false
     @State private var newRoomID: Int?
     @Flow var flow
-    
+
     func getProfileData() async {
         let url = "https://paletteapp.xyz/backend/info/me"
-        
+
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
-        
+
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .formatted(dateFormatter)
-        
+
         AF.request(url, method: .get, headers: getHeaders())
+            .validate(statusCode: 200..<300) // Add validation to ensure the response is valid
             .responseDecodable(of: ProfileResponseModel<ProfileDataModel>.self, decoder: decoder) { response in
                 switch response.result {
                 case .success(let profileResponse):
@@ -90,12 +101,13 @@ struct ChatListView: View {
                 }
             }
     }
-    
+
     func createNewChatRoom() {
         let url = "https://paletteapp.xyz/backend/room"
         let decoder = JSONDecoder()
-        
+
         AF.request(url, method: .post, headers: getHeaders())
+            .validate(statusCode: 200..<300) // Add validation to ensure the response is valid
             .responseDecodable(of: CreateRoomResponseModel<CreateRoomModel>.self, decoder: decoder) { response in
                 switch response.result {
                 case .success(let createRoomResponse):
@@ -105,10 +117,13 @@ struct ChatListView: View {
                     }
                 case .failure(let error):
                     print("Error creating room: \(error.localizedDescription)")
+                    if let data = response.data, let str = String(data: data, encoding: .utf8) {
+                        print("Raw response: \(str)")
+                    }
                 }
             }
     }
-    
+
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack {
@@ -130,7 +145,7 @@ struct ChatListView: View {
                     .padding(.top, 60)
                     .padding(.bottom, 30)
                     AddChatButton(action: createNewChatRoom)
-                    
+
                     VStack(spacing: 10) {
                         ForEach(viewModel.chatRooms, id: \.id) { room in
                             ChatRoomButton(roomTitle: room.title, roomID: room.id, onDelete: { roomID in
