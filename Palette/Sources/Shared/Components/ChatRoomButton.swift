@@ -49,13 +49,3 @@ struct ChatRoomButton: View {
         }
     }
 }
-
-// 사용 예시
-struct ContentView: View {
-    var body: some View {
-        ChatRoomButton(roomTitle: "Example Room", roomID: 1) { roomID in
-            // 삭제 로직
-            print("Deleting room with ID: \(roomID)")
-        }
-    }
-}

@@ -19,7 +19,7 @@ struct MainView: View {
     
     var body: some View {
         ZStack {
-            Color(.white).ignoresSafeArea()
+            Color(Color("BackgroundColor")).ignoresSafeArea()
             
             switch selectedTab {
             case .search:
