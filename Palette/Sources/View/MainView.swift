@@ -23,11 +23,11 @@ struct MainView: View {
             
             switch selectedTab {
             case .search:
-                Text("준비중이에요!").foregroundStyle(.black)
+                MyWorkGalleryView()
             case .home:
                 ChatListView()
             case .setting:
-                Text("준비중이에요!").foregroundStyle(.black)
+                SettingView()
             }
             
             VStack {

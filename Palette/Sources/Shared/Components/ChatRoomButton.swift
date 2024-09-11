@@ -19,24 +19,26 @@ struct ChatRoomButton: View {
                 HStack {
                     Image("PaletteLogo")
                         .resizable()
-                        .frame(width: 58, height: 58)
+                        .frame(width: 40, height: 40)
                         .padding(.leading, 20)
+                        .padding(.trailing, 20)
                     
-                    VStack(alignment: .leading) {
-                        Text("\(Text("Palette").font(.custom("SUIT-Regular", size: 19))) 어시스턴트")
-                            .font(.custom("Pretendard-Regular", size: 19))
-                            .foregroundStyle(Color("LightDark"))
-                            .padding(.bottom, -6)
-                        
-                        MarqueeText(text: roomTitle, font: .custom("Pretendard-Bold", size: 23), startDelay: 1.0)
+                    VStack {
+                        MarqueeText(text: roomTitle, font: .custom("SUIT-Bold", size: 18), startDelay: 1.0)
                             .foregroundStyle(.black)
-                            .frame(height: 30)
+                            .padding(.bottom, -3)
+                        MarqueeText(text: "나 : (대충 오렌지 주스 홍보 설명하는…)", font: .custom("SUIT-SemiBold", size: 13), startDelay: 1.5)
+                            .foregroundStyle(Color("DescText"))
                     }
-                    .padding(.leading, 15)
+                    .padding(.vertical, 18)
                     Spacer()
+                    Image("Arrow")
+                        .resizable()
+                        .frame(width: 6, height: 10)
+                        .padding(.trailing, 15)
                 }
             }
-            .frame(width: 340, height: 110)
+            .frame(width: 350, height: 77)
             .clipShape(RoundedRectangle(cornerRadius: 17, style: .continuous))
         }
         .contextMenu {

@@ -167,8 +167,14 @@ struct ChatListView: View {
                             }
                         }
                     }
-                    
-                    
+                    VStack(spacing: 10) {
+                        ForEach(viewModel.chatRooms, id: \.id) { room in
+                            ChatRoomButton(roomTitle: room.title, roomID: room.id, onDelete: { roomID in
+                                viewModel.deleteChatRoom(roomID: roomID)
+                            })
+                        }
+                    }
+                    .padding(.bottom, 50)
                 }
             }
             .navigationBarHidden(true)
