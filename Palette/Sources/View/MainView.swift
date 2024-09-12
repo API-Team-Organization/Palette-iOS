@@ -19,15 +19,15 @@ struct MainView: View {
     
     var body: some View {
         ZStack {
-            Color(.white).ignoresSafeArea()
+            Color(Color("BackgroundColor")).ignoresSafeArea()
             
             switch selectedTab {
             case .search:
-                Text("준비중이에요!").foregroundStyle(.black)
+                MyWorkGalleryView()
             case .home:
                 ChatListView()
             case .setting:
-                Text("준비중이에요!").foregroundStyle(.black)
+                SettingView()
             }
             
             VStack {

@@ -5,6 +5,7 @@ struct ChatRoomButton: View {
     @Flow var flow
     var roomTitle: String
     var roomID: Int
+    var lastMessage: String?
     var onDelete: (Int) -> Void // 삭제 시 수행할 로직을 전달받는 클로저
     let del_alert = Alert(title: "채팅방 삭제 완료!",
                       message: "채팅방을 성공적으로 삭제했어요!",
@@ -19,24 +20,31 @@ struct ChatRoomButton: View {
                 HStack {
                     Image("PaletteLogo")
                         .resizable()
-                        .frame(width: 58, height: 58)
+                        .frame(width: 40, height: 40)
                         .padding(.leading, 20)
+                        .padding(.trailing, 20)
                     
-                    VStack(alignment: .leading) {
-                        Text("\(Text("Palette").font(.custom("SUIT-Regular", size: 19))) 어시스턴트")
-                            .font(.custom("Pretendard-Regular", size: 19))
-                            .foregroundStyle(Color("LightDark"))
-                            .padding(.bottom, -6)
-                        
-                        MarqueeText(text: roomTitle, font: .custom("Pretendard-Bold", size: 23), startDelay: 1.0)
+                    VStack {
+                        MarqueeText(text: roomTitle, font: .custom("SUIT-Bold", size: 18), startDelay: 1.0)
                             .foregroundStyle(.black)
-                            .frame(height: 30)
+                            .padding(.bottom, -3)
+                        if lastMessage != nil {
+                            MarqueeText(text: lastMessage!, font: .custom("SUIT-SemiBold", size: 13), startDelay: 1.5)
+                                .foregroundStyle(Color("DescText"))
+                        } else {
+                            MarqueeText(text: "채팅방에 아무런 메시지가 없어요..", font: .custom("SUIT-SemiBold", size: 13), startDelay: 1.5)
+                                .foregroundStyle(Color("DescText"))
+                        }
                     }
-                    .padding(.leading, 15)
+                    .padding(.vertical, 18)
                     Spacer()
+                    Image("Arrow")
+                        .resizable()
+                        .frame(width: 6, height: 10)
+                        .padding(.trailing, 15)
                 }
             }
-            .frame(width: 340, height: 110)
+            .frame(width: 350, height: 77)
             .clipShape(RoundedRectangle(cornerRadius: 17, style: .continuous))
         }
         .contextMenu {
@@ -46,16 +54,6 @@ struct ChatRoomButton: View {
             } label: {
                 Label("채팅방 삭제하기", systemImage: "trash")
             }
-        }
-    }
-}
-
-// 사용 예시
-struct ContentView: View {
-    var body: some View {
-        ChatRoomButton(roomTitle: "Example Room", roomID: 1) { roomID in
-            // 삭제 로직
-            print("Deleting room with ID: \(roomID)")
         }
     }
 }

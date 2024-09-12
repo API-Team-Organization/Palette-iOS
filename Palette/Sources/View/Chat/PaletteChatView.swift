@@ -3,7 +3,6 @@ import Alamofire
 import FlowKit
 
 struct PaletteChatView: View {
-    
     let roomTitleprop: String?
     let roomID: Int
     let isNewRoom: Bool
@@ -16,124 +15,152 @@ struct PaletteChatView: View {
     @State private var isLoadingResponse = false
     @State private var isMessageValid = false
     @Environment(\.presentationMode) var presentationMode
-    let update_alert = Alert(title: "방 제목 설정 실패",
-                             message: "채팅방 제목 설정에 실패했습니다.",
-                             dismissButton: .default("확인"))
-    let chatblank_alert = Alert(title: "방 제목 설정 실패",
-                             message: "채팅방 제목 설정에 실패했습니다.",
-                             dismissButton: .default("확인"))
+    let update_alert = Alert(title: Text("방 제목 설정 실패"),
+                             message: Text("채팅방 제목 설정에 실패했습니다."),
+                             dismissButton: .default(Text("확인")))
+    let chatblank_alert = Alert(title: Text("메시지 전송 실패"),
+                                message: Text("메시지 내용을 입력해주세요."),
+                                dismissButton: .default(Text("확인")))
     @Flow var flow
     
+    @StateObject private var websocket: Websocket
+    
+    @State private var fullscreenImage: UIImage?
+    @State private var isFullscreenPresented = false
+    
+    @FocusState private var isInputFocused: Bool
+
+    init(roomTitleprop: String?, roomID: Int, isNewRoom: Bool) {
+        self.roomTitleprop = roomTitleprop
+        self.roomID = roomID
+        self.isNewRoom = isNewRoom
+        _websocket = StateObject(wrappedValue: Websocket(roomID: roomID))
+    }
+    
     var body: some View {
-        VStack {
-            // 헤더
-            HStack {
-                Button(action: {
-                    flow.replace([MainView()], animated: true)
-                }) {
-                    Image(systemName: "chevron.left")
-                        .foregroundColor(.black)
-                        .font(.system(size: 15))
+        ZStack {
+            VStack {
+                // 헤더
+                HStack {
+                    Button(action: {
+                        presentationMode.wrappedValue.dismiss()
+                    }) {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.black)
+                            .font(.system(size: 15))
+                    }
+                    .padding(.leading)
+                    
+                    Image("PaletteLogo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 28)
+                    
+                    Text(roomTitle)
+                        .font(.custom("SUIT-Bold", size: 20))
+                        .foregroundStyle(Color.black)
+                        .lineLimit(1)
+                    
+                    Spacer()
                 }
-                .padding(.leading)
+                .padding()
                 
-                Image("PaletteLogo")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 28)
-                
-                Text(roomTitle)
-                    .font(.custom("SUIT-Bold", size: 20))
-                    .foregroundStyle(Color.black)
-                    .lineLimit(1)
-                
-                Spacer()
-            }
-            .padding()
-            
-            ScrollViewReader { scrollViewProxy in
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 10) {
-                        ForEach(messages) { message in
-                            MessageBubble(message: message)
+                ScrollViewReader { scrollViewProxy in
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 10) {
+                            ForEach(messages + websocket.messages) { message in
+                                MessageBubble(message: message, onImageTap: { image in
+                                    self.fullscreenImage = image
+                                    self.isFullscreenPresented = true
+                                })
                                 .id(message.id)
-                        }
-                        if isLoadingResponse {
-                            HStack {
-                                ProgressView()
-                                    .frame(maxWidth: 200, maxHeight: 200)
-                                    .background(Color.gray.opacity(0.2))
-                                    .cornerRadius(13)
-                                Spacer()
                             }
-                            .padding(.vertical, 4)
+                            if isLoadingResponse {
+                                HStack {
+                                    ProgressView()
+                                        .frame(maxWidth: 200, maxHeight: 200)
+                                        .background(Color.gray.opacity(0.2))
+                                        .cornerRadius(13)
+                                    Spacer()
+                                }
+                                .padding(.vertical, 4)
+                            }
+                        }
+                        .padding()
+                        .onChange(of: messages) { _ in
+                            withAnimation {
+                                scrollViewProxy.scrollTo(messages.last?.id, anchor: .bottom)
+                            }
+                        }
+                        .onChange(of: websocket.messages) { _ in
+                            withAnimation {
+                                scrollViewProxy.scrollTo(websocket.messages.last?.id, anchor: .bottom)
+                            }
                         }
                     }
-                    .padding()
-                    .onChange(of: messages) { _ in
+                    .onAppear {
                         withAnimation {
                             scrollViewProxy.scrollTo(messages.last?.id, anchor: .bottom)
                         }
                     }
                 }
-                .onAppear {
-                    withAnimation {
-                        scrollViewProxy.scrollTo(messages.last?.id, anchor: .bottom)
-                    }
-                }
-            }
-            
-            // 메시지 입력 영역
-            HStack(alignment: .bottom) {
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 20)
-                        .frame(height: max(40, textEditorHeight))
-                        .foregroundStyle(Color("ChatTextFieldBack"))
-                        .overlay {
-                            TextEditor(text: $messageText)
-                                .font(.custom("SUIT-Medium", size: 15))
-                                .foregroundStyle(Color.black)
-                                .padding(.horizontal, 15)
-                                .padding(.vertical, 10)
-                                .scrollContentBackground(.hidden)
-                                .onChange(of: messageText) { _ in
-                                    withAnimation {
-                                        updateTextEditorHeight()
-                                    }
-                                }
-                        }
-                    
-                    if messageText.isEmpty {
-                        Text("당신의 Palette를 그려보세요")
-                            .foregroundColor(.gray)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 12)
-                            .font(.custom("SUIT-Medium", size: 15))
-                    }
-                }
                 
-                Button(action: {
-                    if isMessageValid {
-                        sendMessage()
-                    } else {
-                        flow.alert(chatblank_alert)
+                // 메시지 입력 영역
+                HStack(alignment: .bottom) {
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 20)
+                            .frame(height: max(40, textEditorHeight))
+                            .foregroundStyle(Color("ChatTextFieldBack"))
+                        
+                        TextEditor(text: $messageText)
+                            .font(.custom("SUIT-Medium", size: 15))
+                            .foregroundStyle(Color.black)
+                            .padding(.horizontal, 15)
+                            .padding(.vertical, 10)
+                            .frame(height: max(40, textEditorHeight))
+                            .scrollContentBackground(.hidden)
+                            .onChange(of: messageText) { _ in
+                                withAnimation {
+                                    updateTextEditorHeight()
+                                }
+                            }
+                            .focused($isInputFocused)
+                        
+                        if messageText.isEmpty {
+                            Text("당신의 Palette를 그려보세요")
+                                .foregroundColor(.gray)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 12)
+                                .font(.custom("SUIT-Medium", size: 15))
+                        }
                     }
-                }) {
-                    Image(systemName: "paperplane.fill")
-                        .foregroundColor(isMessageValid ? Color("AccentColor") : Color.gray)
-                        .padding(10)
-                        .background(Color("ChatTextFieldBack"))
-                        .clipShape(Circle())
+                    
+                    Button(action: sendMessage) {
+                        Image(systemName: "paperplane.fill")
+                            .foregroundColor(isMessageValid ? Color("AccentColor") : Color.gray)
+                            .padding(10)
+                            .background(Color("ChatTextFieldBack"))
+                            .clipShape(Circle())
+                    }
+                    .disabled(!isMessageValid)
                 }
-                .disabled(!isMessageValid)
+                .padding(.horizontal)
+                .padding(.top, 5)
+                .padding(.bottom, 20)
             }
-            .padding(.horizontal)
-            .padding(.top, 5)
-            .padding(.bottom, 20)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.white)
+            .navigationBarHidden(true)
+            
+            if isFullscreenPresented, let image = fullscreenImage {
+                FullScreenImageView(image: image, isPresented: $isFullscreenPresented)
+                    .edgesIgnoringSafeArea(.all)
+                    .transition(.opacity)
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.white)
-        .navigationBarHidden(true)
+        .onTapGesture {
+            isInputFocused = false
+        }
         .onAppear {
             if isNewRoom {
                 showingRoomTitleAlert = true
@@ -179,22 +206,11 @@ struct PaletteChatView: View {
     func sendMessage() {
         guard isMessageValid else { return }
         
-        let userMessage = ChatMessageModel(id: messages.count,
-                                           message: messageText,
-                                           datetime: ISO8601DateFormatter().string(from: Date()),
-                                           roomId: roomID,
-                                           userId: 0,
-                                           isAi: false,
-                                           resource: .CHAT)
-        DispatchQueue.main.async {
-            self.messages.append(userMessage)
-        }
-        
-        let requestModel = SendMessageRequestModel(message: messageText, roomId: roomID)
+        let requestModel = SendMessageRequestModel(message: messageText)
         
         isLoadingResponse = true
 
-        AF.request("https://paletteapp.xyz/backend/chat",
+        AF.request("https://api.paletteapp.xyz/chat?roomId=\(roomID)",
                    method: .post,
                    parameters: requestModel,
                    encoder: JSONParameterEncoder.default,
@@ -203,9 +219,9 @@ struct PaletteChatView: View {
                 DispatchQueue.main.async {
                     switch response.result {
                     case .success(let chatResponse):
-                        self.messages.append(contentsOf: chatResponse.data.received)
+                        print("Message sent successfully: \(chatResponse)")
                     case .failure(let error):
-                        print("Error: \(error.localizedDescription)")
+                        print("Error sending message: \(error.localizedDescription)")
                         if let data = response.data, let str = String(data: data, encoding: .utf8) {
                             print("Received data: \(str)")
                         }
@@ -220,7 +236,7 @@ struct PaletteChatView: View {
     }
     
     private func updateRoomTitle() async {
-        let url = "https://paletteapp.xyz/backend/room/title"
+        let url = "https://api.paletteapp.xyz/room/title"
         let parameters = ChatroomNameFetchModel(id: roomID, title: roomTitle)
         
         AF.request(url, method: .patch, parameters: parameters, encoder: JSONParameterEncoder.default, headers: getHeaders())
@@ -235,18 +251,19 @@ struct PaletteChatView: View {
                     }
                     
                 case .failure(let error):
-                    flow.alert(update_alert)
                     print("오류:", error.localizedDescription)
                 }
             }
     }
     
     private func loadChatMessages() {
-        AF.request("https://paletteapp.xyz/backend/chat/\(roomID)", method: .get, headers: getHeaders())
+        AF.request("https://api.paletteapp.xyz/chat/\(roomID)", method: .get, headers: getHeaders())
             .responseDecodable(of: ChatHistoryResponse.self) { response in
                 switch response.result {
                 case .success(let chatHistory):
-                    self.messages = chatHistory.data
+                    DispatchQueue.main.async {
+                        self.messages = chatHistory.data.reversed()
+                    }
                 case .failure(let error):
                     print("Error loading chat history: \(error.localizedDescription)")
                     if let data = response.data, let str = String(data: data, encoding: .utf8) {
@@ -255,7 +272,9 @@ struct PaletteChatView: View {
                         if let jsonData = str.data(using: .utf8) {
                             do {
                                 let chatHistory = try JSONDecoder().decode(ChatHistoryResponse.self, from: jsonData)
-                                self.messages = chatHistory.data
+                                DispatchQueue.main.async {
+                                    self.messages = chatHistory.data.reversed()
+                                }
                             } catch {
                                 print("Manual decoding failed: \(error)")
                             }

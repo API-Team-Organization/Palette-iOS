@@ -41,7 +41,7 @@ struct VerifyCodeInputView: View {
     }
     
     func handleVerifyCode() async {
-        let url = "https://paletteapp.xyz/backend/auth/verify"
+        let url = "https://api.paletteapp.xyz/auth/verify"
         let credentials = VerifyCodeModel(code: verifyCode)
         
         AF.request(url, method: .post, parameters: credentials, encoder: JSONParameterEncoder.default, headers: getHeaders())
@@ -59,7 +59,7 @@ struct VerifyCodeInputView: View {
     }
     
     func handleResendVerifyCode() async {
-        let url = "https://paletteapp.xyz/backend/auth/resend"
+        let url = "https://api.paletteapp.xyz/auth/resend"
     
         
         AF.request(url, method: .post, headers: getHeaders())

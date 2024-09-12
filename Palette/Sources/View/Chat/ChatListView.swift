@@ -29,7 +29,7 @@ class ChatRoomViewModel: ObservableObject {
     @Published var chatRooms: [ChatRoomModel] = []
 
     func getChatRoomData() {
-        let url = "https://paletteapp.xyz/room/list"
+        let url = "https://api.paletteapp.xyz/room/list"
         let decoder = JSONDecoder()
 
         AF.request(url, method: .get, headers: getHeaders())
@@ -50,7 +50,7 @@ class ChatRoomViewModel: ObservableObject {
     }
 
     func deleteChatRoom(roomID: Int) {
-        let url = "https://paletteapp.xyz/room/\(roomID)"
+        let url = "https://api.paletteapp.xyz/room/\(roomID)"
 
         AF.request(url, method: .delete, headers: getHeaders())
             .validate(statusCode: 200..<300) // Add validation to ensure the response is valid
@@ -78,7 +78,7 @@ struct ChatListView: View {
     @Flow var flow
 
     func getProfileData() async {
-        let url = "https://paletteapp.xyz/backend/info/me"
+        let url = "https://api.paletteapp.xyz/info/me"
 
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
@@ -103,7 +103,7 @@ struct ChatListView: View {
     }
 
     func createNewChatRoom() {
-        let url = "https://paletteapp.xyz/backend/room"
+        let url = "https://api.paletteapp.xyz/room"
         let decoder = JSONDecoder()
 
         AF.request(url, method: .post, headers: getHeaders())
@@ -129,26 +129,47 @@ struct ChatListView: View {
             VStack {
                 VStack {
                     HStack {
-                        VStack(alignment: .leading) {
-                            Text("\(uName)님!")
-                                .font(.custom("SUIT-ExtraBold", size: 31))
-                                .padding(.leading, 15)
-                                .foregroundStyle(.black)
-                            Text("오늘은 뭘 작업해볼까요?")
-                                .font(.custom("SUIT-ExtraBold", size: 31))
-                                .padding(.leading, 15)
-                                .foregroundStyle(.black)
-                        }
-                        .padding(.leading, 15)
+                        Image("PaletteLogo")
+                            .resizable()
+                            .frame(width: 35, height: 35)
+                            .padding(.leading, 20)
+                            .padding(.top, 20)
                         Spacer()
                     }
-                    .padding(.top, 60)
-                    .padding(.bottom, 30)
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text("\(Text(uName).font(.custom("SUIT-Heavy", size: 25)))님 환영합니다!")
+                                .font(.custom("SUIT-ExtraBold", size: 25))
+                                .padding(.leading, 20)
+                                .foregroundStyle(.black)
+                        }
+                        Spacer()
+                    }
+                    .padding(.top, 20)
+                    .padding(.bottom, 20)
                     AddChatButton(action: createNewChatRoom)
-
+                    HStack {
+                        Text("내가 만든 포스터")
+                            .font(.custom("SUIT-Bold", size: 18))
+                            .foregroundStyle(.black)
+                            .padding(.leading, 25)
+                        Spacer()
+                        VStack {
+                            Spacer()
+                            Button(action: {
+                                
+                            }) {
+                                Text("전체보기")
+                                    .font(.custom("SUIT-Medium", size: 14))
+                                    .foregroundStyle(Color("AccentColor"))
+                                    .padding(.trailing, 25)
+                                    
+                            }
+                        }
+                    }
                     VStack(spacing: 10) {
                         ForEach(viewModel.chatRooms, id: \.id) { room in
-                            ChatRoomButton(roomTitle: room.title, roomID: room.id, onDelete: { roomID in
+                            ChatRoomButton(roomTitle: room.title, roomID: room.id, lastMessage: room.message, onDelete: { roomID in
                                 viewModel.deleteChatRoom(roomID: roomID)
                             })
                         }
@@ -158,13 +179,14 @@ struct ChatListView: View {
             }
             .navigationBarHidden(true)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.white)
+            .background(Color("BackgroundColor"))
             .onAppear {
                 Task {
                     await getProfileData()
-                    viewModel.getChatRoomData()
+                    await viewModel.getChatRoomData()
                 }
             }
         }
     }
+    
 }

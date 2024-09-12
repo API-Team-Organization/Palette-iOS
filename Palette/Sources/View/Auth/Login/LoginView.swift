@@ -33,7 +33,7 @@ struct LoginView: View {
     
     
     func handleLogin() async {
-        let url = "https://paletteapp.xyz/backend/auth/login"
+        let url = "https://api.paletteapp.xyz/auth/login"
         let credentials = LoginRequestModel(email: email, password: password)
         
         AF.request(url,

@@ -9,5 +9,5 @@ import Foundation
 
 struct SendMessageRequestModel: Codable {
     let message: String
-    let roomId: Int
+//    let roomId: Int
 }
