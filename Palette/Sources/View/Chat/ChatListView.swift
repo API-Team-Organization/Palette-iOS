@@ -29,7 +29,7 @@ class ChatRoomViewModel: ObservableObject {
     @Published var chatRooms: [ChatRoomModel] = []
 
     func getChatRoomData() {
-        let url = "https://paletteapp.xyz/backend/room/list"
+        let url = "https://api.paletteapp.xyz/room/list"
         let decoder = JSONDecoder()
 
         AF.request(url, method: .get, headers: getHeaders())
@@ -50,7 +50,7 @@ class ChatRoomViewModel: ObservableObject {
     }
 
     func deleteChatRoom(roomID: Int) {
-        let url = "https://paletteapp.xyz/backend/room/\(roomID)"
+        let url = "https://api.paletteapp.xyz/room/\(roomID)"
 
         AF.request(url, method: .delete, headers: getHeaders())
             .validate(statusCode: 200..<300) // Add validation to ensure the response is valid
@@ -78,7 +78,7 @@ struct ChatListView: View {
     @Flow var flow
 
     func getProfileData() async {
-        let url = "https://paletteapp.xyz/backend/info/me"
+        let url = "https://api.paletteapp.xyz/info/me"
 
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
@@ -103,7 +103,7 @@ struct ChatListView: View {
     }
 
     func createNewChatRoom() {
-        let url = "https://paletteapp.xyz/backend/room"
+        let url = "https://api.paletteapp.xyz/room"
         let decoder = JSONDecoder()
 
         AF.request(url, method: .post, headers: getHeaders())
@@ -138,8 +138,8 @@ struct ChatListView: View {
                     }
                     HStack {
                         VStack(alignment: .leading) {
-                            Text("\(Text(uName).font(.custom("SUIT-ExtraBold", size: 25)))님 환영합니다!")
-                                .font(.custom("SUIT-Bold", size: 25))
+                            Text("\(Text(uName).font(.custom("SUIT-Heavy", size: 25)))님 환영합니다!")
+                                .font(.custom("SUIT-ExtraBold", size: 25))
                                 .padding(.leading, 20)
                                 .foregroundStyle(.black)
                         }

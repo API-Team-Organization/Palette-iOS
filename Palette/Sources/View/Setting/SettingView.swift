@@ -31,7 +31,7 @@ struct SettingView: View {
     }
     
     func getProfileData() async {
-        let url = "https://paletteapp.xyz/backend/info/me"
+        let url = "https://api.paletteapp.xyz/info/me"
 
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
@@ -59,7 +59,7 @@ struct SettingView: View {
         VStack {
             HStack {
                 Text("설정")
-                    .font(.custom("SUIT-Bold", size: 25))
+                    .font(.custom("SUIT-ExtraBold", size: 25))
                     .foregroundStyle(.black)
                     .padding(.top, 45)
                     .padding(.leading, 20)

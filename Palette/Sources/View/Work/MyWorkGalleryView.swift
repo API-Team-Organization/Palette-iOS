@@ -16,7 +16,7 @@ struct MyWorkGalleryView: View {
         VStack {
             HStack {
                 Text("내 작업물")
-                    .font(.custom("SUIT-Bold", size: 25))
+                    .font(.custom("SUIT-ExtraBold", size: 25))
                     .foregroundStyle(.black)
                     .padding(.top, 45)
                     .padding(.leading, 25)

@@ -194,7 +194,7 @@ struct PaletteChatView: View {
         
         isLoadingResponse = true
 
-        AF.request("https://paletteapp.xyz/backend/chat",
+        AF.request("https://api.paletteapp.xyz/chat",
                    method: .post,
                    parameters: requestModel,
                    encoder: JSONParameterEncoder.default,
@@ -220,7 +220,7 @@ struct PaletteChatView: View {
     }
     
     private func updateRoomTitle() async {
-        let url = "https://paletteapp.xyz/backend/room/title"
+        let url = "https://api.paletteapp.xyz/room/title"
         let parameters = ChatroomNameFetchModel(id: roomID, title: roomTitle)
         
         AF.request(url, method: .patch, parameters: parameters, encoder: JSONParameterEncoder.default, headers: getHeaders())
@@ -242,7 +242,7 @@ struct PaletteChatView: View {
     }
     
     private func loadChatMessages() {
-        AF.request("https://paletteapp.xyz/backend/chat/\(roomID)", method: .get, headers: getHeaders())
+        AF.request("https://api.paletteapp.xyz/chat/\(roomID)", method: .get, headers: getHeaders())
             .responseDecodable(of: ChatHistoryResponse.self) { response in
                 switch response.result {
                 case .success(let chatHistory):

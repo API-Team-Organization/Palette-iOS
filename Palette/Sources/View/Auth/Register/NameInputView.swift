@@ -11,7 +11,7 @@ import Alamofire
 
 struct NameInputView: View {
     
-    let serverurl = "https://paletteapp.xyz/backend/auth/register"
+    let serverurl = "https://api.paletteapp.xyz/auth/register"
     
     var email: String
     var pw: String
@@ -31,7 +31,7 @@ struct NameInputView: View {
                       dismissButton: .default("확인"))
     
     func sendRegisterRequest() async {
-        let url = "https://paletteapp.xyz/backend/auth/register"
+        let url = "https://api.paletteapp.xyz/auth/register"
         let credentials = SignUpRequestModel(username: userName, password: pw, birthDate: birthday, email: email)
         
         AF.request(url,

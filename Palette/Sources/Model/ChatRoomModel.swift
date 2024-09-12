@@ -10,4 +10,5 @@ import Foundation
 struct ChatRoomModel: Identifiable, Decodable {
     let id: Int
     let title: String
+    let message: String?
 }
