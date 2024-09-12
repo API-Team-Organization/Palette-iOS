@@ -18,7 +18,7 @@ struct SegmentedPicker: View {
                     Text(options[index])
                         .font(.custom("SUIT-Bold", size: 15))
                         .foregroundColor(preselectedIndex == index ? selectedTextColor : descTextColor)
-                        .zIndex(1) // Ensure text is on top
+                        .zIndex(1)
                 }
                 .onTapGesture {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {

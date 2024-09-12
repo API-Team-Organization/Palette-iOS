@@ -7,6 +7,11 @@ struct MyWorkGalleryView: View {
     @Flow var flow
     @State private var selectedTab = 0
     
+    func generateItems() -> [Item] {
+        return (1...6).map { _ in Item(image: Image(systemName: "paintpalette.fill")) }
+    }
+    
+    
     var body: some View {
         VStack {
             HStack {
@@ -20,42 +25,43 @@ struct MyWorkGalleryView: View {
             }
             
             SegmentedPicker(preselectedIndex: $selectedTab,
-                    options: ["이미지", "동영상"])
-            }
+                            options: ["이미지", "동영상"])
             
+            if selectedTab == 0 {
+                GridView(items: generateItems())
+            } else if selectedTab == 1 {
+                GridView(items: generateItems())
+            }
             Spacer()
+        }
     }
 }
 
 struct GridView: View {
-    let items: [Item]
-    let columns = [
-        GridItem(.flexible()),
-        GridItem(.flexible())
-    ]
-    
-    var body: some View {
-        ScrollView {
-            LazyVGrid(columns: columns, spacing: 10) {
-                ForEach(items) { item in
-                    item.image
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 150)
-                        .background(Color.white)
-                        .cornerRadius(10)
+        let items: [Item]
+        let columns = [
+            GridItem(.flexible()),
+            GridItem(.flexible())
+        ]
+        
+        var body: some View {
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: 10) {
+                    ForEach(items) { item in
+                        item.image
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 170, height: 225)
+                            .background(Color.white)
+                            .cornerRadius(10)
+                    }
                 }
+                .padding()
             }
-            .padding()
-        }
     }
 }
 
 struct Item: Identifiable {
     let id = UUID()
     let image: Image
-}
-
-#Preview {
-    MyWorkGalleryView()
 }
