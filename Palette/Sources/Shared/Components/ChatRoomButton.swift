@@ -5,6 +5,7 @@ struct ChatRoomButton: View {
     @Flow var flow
     var roomTitle: String
     var roomID: Int
+    var lastMessage: String?
     var onDelete: (Int) -> Void // 삭제 시 수행할 로직을 전달받는 클로저
     let del_alert = Alert(title: "채팅방 삭제 완료!",
                       message: "채팅방을 성공적으로 삭제했어요!",
@@ -27,8 +28,13 @@ struct ChatRoomButton: View {
                         MarqueeText(text: roomTitle, font: .custom("SUIT-Bold", size: 18), startDelay: 1.0)
                             .foregroundStyle(.black)
                             .padding(.bottom, -3)
-                        MarqueeText(text: "나 : (대충 오렌지 주스 홍보 설명하는…)", font: .custom("SUIT-SemiBold", size: 13), startDelay: 1.5)
-                            .foregroundStyle(Color("DescText"))
+                        if lastMessage != nil {
+                            MarqueeText(text: lastMessage!, font: .custom("SUIT-SemiBold", size: 13), startDelay: 1.5)
+                                .foregroundStyle(Color("DescText"))
+                        } else {
+                            MarqueeText(text: "채팅방에 아무런 메시지가 없어요..", font: .custom("SUIT-SemiBold", size: 13), startDelay: 1.5)
+                                .foregroundStyle(Color("DescText"))
+                        }
                     }
                     .padding(.vertical, 18)
                     Spacer()
