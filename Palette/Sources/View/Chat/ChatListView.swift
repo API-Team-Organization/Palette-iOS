@@ -119,9 +119,9 @@ struct ChatListView: View {
                     print("Error creating room: \(error.localizedDescription)")
                     if let data = response.data, let str = String(data: data, encoding: .utf8) {
                         print("Raw response: \(str)")
-                    }
                 }
             }
+        }
     }
 
     var body: some View {
@@ -138,7 +138,7 @@ struct ChatListView: View {
                     }
                     HStack {
                         VStack(alignment: .leading) {
-                            Text("\(Text(uName).font(.custom("SUIT-Heavy", size: 25)))님 환영합니다!")
+                            Text("\(Text(uName).font(.custom("SUIT-ExtraBold", size: 25)))님 환영합니다!")
                                 .font(.custom("SUIT-ExtraBold", size: 25))
                                 .padding(.leading, 20)
                                 .foregroundStyle(.black)
