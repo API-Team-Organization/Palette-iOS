@@ -3,7 +3,6 @@ import Alamofire
 import FlowKit
 
 struct PaletteChatView: View {
-    
     let roomTitleprop: String?
     let roomID: Int
     let isNewRoom: Bool
@@ -25,123 +24,143 @@ struct PaletteChatView: View {
     @Flow var flow
     
     @StateObject private var websocket: Websocket
-        
-        init(roomTitleprop: String?, roomID: Int, isNewRoom: Bool) {
-            self.roomTitleprop = roomTitleprop
-            self.roomID = roomID
-            self.isNewRoom = isNewRoom
-            _websocket = StateObject(wrappedValue: Websocket(roomID: roomID))
-        }
+    
+    @State private var fullscreenImage: UIImage?
+    @State private var isFullscreenPresented = false
+    
+    @FocusState private var isInputFocused: Bool
+
+    init(roomTitleprop: String?, roomID: Int, isNewRoom: Bool) {
+        self.roomTitleprop = roomTitleprop
+        self.roomID = roomID
+        self.isNewRoom = isNewRoom
+        _websocket = StateObject(wrappedValue: Websocket(roomID: roomID))
+    }
     
     var body: some View {
-        VStack {
-            // 헤더
-            HStack {
-                Button(action: {
-                    flow.replace([MainView()], animated: true)
-                }) {
-                    Image(systemName: "chevron.left")
-                        .foregroundColor(.black)
-                        .font(.system(size: 15))
+        ZStack {
+            VStack {
+                // 헤더
+                HStack {
+                    Button(action: {
+                        presentationMode.wrappedValue.dismiss()
+                    }) {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.black)
+                            .font(.system(size: 15))
+                    }
+                    .padding(.leading)
+                    
+                    Image("PaletteLogo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 28)
+                    
+                    Text(roomTitle)
+                        .font(.custom("SUIT-Bold", size: 20))
+                        .foregroundStyle(Color.black)
+                        .lineLimit(1)
+                    
+                    Spacer()
                 }
-                .padding(.leading)
+                .padding()
                 
-                Image("PaletteLogo")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 28)
-                
-                Text(roomTitle)
-                    .font(.custom("SUIT-Bold", size: 20))
-                    .foregroundStyle(Color.black)
-                    .lineLimit(1)
-                
-                Spacer()
-            }
-            .padding()
-            
-            ScrollViewReader { scrollViewProxy in
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 10) {
-                        ForEach(messages + websocket.messages) { message in
-                            MessageBubble(message: message)
+                ScrollViewReader { scrollViewProxy in
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 10) {
+                            ForEach(messages + websocket.messages) { message in
+                                MessageBubble(message: message, onImageTap: { image in
+                                    self.fullscreenImage = image
+                                    self.isFullscreenPresented = true
+                                })
                                 .id(message.id)
-                        }
-                        if isLoadingResponse {
-                            HStack {
-                                ProgressView()
-                                    .frame(maxWidth: 200, maxHeight: 200)
-                                    .background(Color.gray.opacity(0.2))
-                                    .cornerRadius(13)
-                                Spacer()
                             }
-                            .padding(.vertical, 4)
+                            if isLoadingResponse {
+                                HStack {
+                                    ProgressView()
+                                        .frame(maxWidth: 200, maxHeight: 200)
+                                        .background(Color.gray.opacity(0.2))
+                                        .cornerRadius(13)
+                                    Spacer()
+                                }
+                                .padding(.vertical, 4)
+                            }
+                        }
+                        .padding()
+                        .onChange(of: messages) { _ in
+                            withAnimation {
+                                scrollViewProxy.scrollTo(messages.last?.id, anchor: .bottom)
+                            }
+                        }
+                        .onChange(of: websocket.messages) { _ in
+                            withAnimation {
+                                scrollViewProxy.scrollTo(websocket.messages.last?.id, anchor: .bottom)
+                            }
                         }
                     }
-                    .padding()
-                    .onChange(of: messages) { _ in
+                    .onAppear {
                         withAnimation {
                             scrollViewProxy.scrollTo(messages.last?.id, anchor: .bottom)
                         }
                     }
-                    .onChange(of: websocket.messages) { _ in
-                        withAnimation {
-                            scrollViewProxy.scrollTo(websocket.messages.last?.id, anchor: .bottom)
-                        }
-                    }
                 }
-                .onAppear {
-                    withAnimation {
-                        scrollViewProxy.scrollTo(messages.last?.id, anchor: .bottom)
-                    }
-                }
-            }
-            
-            // 메시지 입력 영역
-            HStack(alignment: .bottom) {
-                            ZStack(alignment: .leading) {
-                                RoundedRectangle(cornerRadius: 20)
-                                    .frame(height: max(40, textEditorHeight))
-                                    .foregroundStyle(Color("ChatTextFieldBack"))
-                                
-                                TextEditor(text: $messageText)
-                                    .font(.custom("SUIT-Medium", size: 15))
-                                    .foregroundStyle(Color.black)
-                                    .padding(.horizontal, 15)
-                                    .padding(.vertical, 10)
-                                    .frame(height: max(40, textEditorHeight))
-                                    .scrollContentBackground(.hidden)
-                                    .onChange(of: messageText) { _ in
-                                        withAnimation {
-                                            updateTextEditorHeight()
-                                        }
-                                    }
-                                
-                                if messageText.isEmpty {
-                                    Text("당신의 Palette를 그려보세요")
-                                        .foregroundColor(.gray)
-                                        .padding(.horizontal, 20)
-                                        .padding(.vertical, 12)
-                                        .font(.custom("SUIT-Medium", size: 15))
+                
+                // 메시지 입력 영역
+                HStack(alignment: .bottom) {
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 20)
+                            .frame(height: max(40, textEditorHeight))
+                            .foregroundStyle(Color("ChatTextFieldBack"))
+                        
+                        TextEditor(text: $messageText)
+                            .font(.custom("SUIT-Medium", size: 15))
+                            .foregroundStyle(Color.black)
+                            .padding(.horizontal, 15)
+                            .padding(.vertical, 10)
+                            .frame(height: max(40, textEditorHeight))
+                            .scrollContentBackground(.hidden)
+                            .onChange(of: messageText) { _ in
+                                withAnimation {
+                                    updateTextEditorHeight()
                                 }
                             }
-                            
-                            Button(action: sendMessage) {
-                                Image(systemName: "paperplane.fill")
-                                    .foregroundColor(isMessageValid ? Color("AccentColor") : Color.gray)
-                                    .padding(10)
-                                    .background(Color("ChatTextFieldBack"))
-                                    .clipShape(Circle())
-                            }
-                            .disabled(!isMessageValid)
+                            .focused($isInputFocused)
+                        
+                        if messageText.isEmpty {
+                            Text("당신의 Palette를 그려보세요")
+                                .foregroundColor(.gray)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 12)
+                                .font(.custom("SUIT-Medium", size: 15))
                         }
-                        .padding(.horizontal)
-                        .padding(.top, 5)
-                        .padding(.bottom, 20)
                     }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.white)
-        .navigationBarHidden(true)
+                    
+                    Button(action: sendMessage) {
+                        Image(systemName: "paperplane.fill")
+                            .foregroundColor(isMessageValid ? Color("AccentColor") : Color.gray)
+                            .padding(10)
+                            .background(Color("ChatTextFieldBack"))
+                            .clipShape(Circle())
+                    }
+                    .disabled(!isMessageValid)
+                }
+                .padding(.horizontal)
+                .padding(.top, 5)
+                .padding(.bottom, 20)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.white)
+            .navigationBarHidden(true)
+            
+            if isFullscreenPresented, let image = fullscreenImage {
+                FullScreenImageView(image: image, isPresented: $isFullscreenPresented)
+                    .edgesIgnoringSafeArea(.all)
+                    .transition(.opacity)
+            }
+        }
+        .onTapGesture {
+            isInputFocused = false
+        }
         .onAppear {
             if isNewRoom {
                 showingRoomTitleAlert = true
@@ -185,48 +204,36 @@ struct PaletteChatView: View {
     }
 
     func sendMessage() {
-            guard isMessageValid else { return }
-            
-            let userMessage = ChatMessageModel(id: messages.count,
-                                               message: messageText,
-                                               datetime: ISO8601DateFormatter().string(from: Date()),
-                                               roomId: roomID,
-                                               userId: 0,
-                                               isAi: false,
-                                               resource: .CHAT)
-            
-//            DispatchQueue.main.async {
-//                self.messages.append(userMessage)
-//            }
-            
-            let requestModel = SendMessageRequestModel(message: messageText)
-            
-            isLoadingResponse = true
+        guard isMessageValid else { return }
+        
+        let requestModel = SendMessageRequestModel(message: messageText)
+        
+        isLoadingResponse = true
 
-            AF.request("https://api.paletteapp.xyz/chat?roomId=\(roomID)",
-                       method: .post,
-                       parameters: requestModel,
-                       encoder: JSONParameterEncoder.default,
-                       headers: getHeaders())
-                .responseDecodable(of: ChatMessageResponseModel.self) { response in
-                    DispatchQueue.main.async {
-                        switch response.result {
-                        case .success(let chatResponse):
-                            print("Message sent successfully: \(chatResponse)")
-                        case .failure(let error):
-                            print("Error sending message: \(error.localizedDescription)")
-                            if let data = response.data, let str = String(data: data, encoding: .utf8) {
-                                print("Received data: \(str)")
-                            }
+        AF.request("https://api.paletteapp.xyz/chat?roomId=\(roomID)",
+                   method: .post,
+                   parameters: requestModel,
+                   encoder: JSONParameterEncoder.default,
+                   headers: getHeaders())
+            .responseDecodable(of: ChatMessageResponseModel.self) { response in
+                DispatchQueue.main.async {
+                    switch response.result {
+                    case .success(let chatResponse):
+                        print("Message sent successfully: \(chatResponse)")
+                    case .failure(let error):
+                        print("Error sending message: \(error.localizedDescription)")
+                        if let data = response.data, let str = String(data: data, encoding: .utf8) {
+                            print("Received data: \(str)")
                         }
-                        self.isLoadingResponse = false
                     }
+                    self.isLoadingResponse = false
                 }
-            
-            messageText = ""
-            textEditorHeight = 40
-            isMessageValid = false
-        }
+            }
+        
+        messageText = ""
+        textEditorHeight = 40
+        isMessageValid = false
+    }
     
     private func updateRoomTitle() async {
         let url = "https://api.paletteapp.xyz/room/title"
@@ -244,7 +251,6 @@ struct PaletteChatView: View {
                     }
                     
                 case .failure(let error):
-//                    flow.alert(update_alert)
                     print("오류:", error.localizedDescription)
                 }
             }
@@ -285,126 +291,4 @@ extension String {
         let boundingBox = self.boundingRect(with: constraintRect, options: .usesLineFragmentOrigin, attributes: [NSAttributedString.Key.font: font], context: nil)
         return ceil(boundingBox.height)
     }
-}
-
-
-class Websocket: ObservableObject {
-    @Published var messages = [ChatMessageModel]()
-    private var webSocketTask: URLSessionWebSocketTask?
-    private let roomID: Int
-    
-    init(roomID: Int) {
-        self.roomID = roomID
-        self.connect()
-    }
-    
-    private func connect() {
-        guard let url = URL(string: "wss://api.paletteapp.xyz/ws/\(roomID)") else {
-            print("Invalid URL")
-            return
-        }
-        
-        var request = URLRequest(url: url)
-        
-        // Add authentication token to the request
-        let headers = getHeaders()
-        headers.forEach { header in
-            request.setValue(header.value, forHTTPHeaderField: header.name)
-        }
-        
-        webSocketTask = URLSession.shared.webSocketTask(with: request)
-        webSocketTask?.resume()
-        print("WebSocket connected successfully.")
-        receiveMessage()
-    }
-    
-    private func getHeaders() -> HTTPHeaders {
-        let token: String
-        if let tokenData = KeychainManager.load(key: "accessToken"),
-           let tokenString = String(data: tokenData, encoding: .utf8) {
-            token = tokenString
-        } else {
-            token = ""
-        }
-        
-        return ["x-auth-token": token]
-    }
-    
-    private func receiveMessage() {
-        webSocketTask?.receive { [weak self] result in
-            switch result {
-            case .failure(let error):
-                print("WebSocket Receive Error: \(error.localizedDescription)")
-                self?.reconnect()
-            case .success(let message):
-                switch message {
-                case .string(let text):
-                    print("Received WebSocket message: \(text)")
-                    if let data = text.data(using: .utf8) {
-                        do {
-                            let baseResponse = try JSONDecoder().decode(WebSocketResponseBase.self, from: data)
-                            switch baseResponse.type {
-                            case .NEW_CHAT:
-                                let response = try JSONDecoder().decode(WebSocketResponse<WebSocketSuccessResponseData>.self, from: data)
-                                if let chatMessage = response.data.message {
-                                    DispatchQueue.main.async {
-                                        self?.messages.append(chatMessage)
-                                    }
-                                }
-                            case .ERROR:
-                                let response = try JSONDecoder().decode(WebSocketResponse<WebSocketFailResponseData>.self, from: data)
-                                print("WebSocket Error: \(response.data.message ?? "Unknown error")")
-                            }
-                        } catch {
-                            print("WebSocket Decoding Error: \(error.localizedDescription)")
-                        }
-                    }
-                case .data(let data):
-                    print("Received binary data: \(data)")
-                @unknown default:
-                    break
-                }
-                self?.receiveMessage()
-            }
-        }
-    }
-    
-    private func reconnect() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
-            print("Attempting to reconnect WebSocket...")
-            self?.connect()
-        }
-    }
-}
-
-struct WebSocketResponseBase: Decodable {
-    let type: MessageType
-}
-
-enum ResourceType: String, Codable {
-    case TEXT
-    case IMAGE
-    case START
-    case PROMPT
-    case END
-}
-
-enum MessageType: String, Codable {
-    case ERROR
-    case NEW_CHAT
-}
-
-struct WebSocketResponse<T: Decodable>: Decodable {
-    let type: MessageType
-    var data: T
-}
-
-struct WebSocketSuccessResponseData: Codable {
-    let action: ResourceType
-    let message: ChatMessageModel?
-}
-
-struct WebSocketFailResponseData: Codable {
-    let kind: String?
-    let message: String?
 }
