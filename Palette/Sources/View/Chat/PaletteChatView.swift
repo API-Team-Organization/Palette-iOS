@@ -195,9 +195,9 @@ struct PaletteChatView: View {
                                                isAi: false,
                                                resource: .CHAT)
             
-            DispatchQueue.main.async {
-                self.messages.append(userMessage)
-            }
+//            DispatchQueue.main.async {
+//                self.messages.append(userMessage)
+//            }
             
             let requestModel = SendMessageRequestModel(message: messageText)
             
@@ -255,7 +255,9 @@ struct PaletteChatView: View {
             .responseDecodable(of: ChatHistoryResponse.self) { response in
                 switch response.result {
                 case .success(let chatHistory):
-                    self.messages = chatHistory.data
+                    DispatchQueue.main.async {
+                        self.messages = chatHistory.data.reversed()
+                    }
                 case .failure(let error):
                     print("Error loading chat history: \(error.localizedDescription)")
                     if let data = response.data, let str = String(data: data, encoding: .utf8) {
@@ -264,7 +266,9 @@ struct PaletteChatView: View {
                         if let jsonData = str.data(using: .utf8) {
                             do {
                                 let chatHistory = try JSONDecoder().decode(ChatHistoryResponse.self, from: jsonData)
-                                self.messages = chatHistory.data
+                                DispatchQueue.main.async {
+                                    self.messages = chatHistory.data.reversed()
+                                }
                             } catch {
                                 print("Manual decoding failed: \(error)")
                             }
@@ -283,9 +287,9 @@ extension String {
     }
 }
 
+
 class Websocket: ObservableObject {
     @Published var messages = [ChatMessageModel]()
-    
     private var webSocketTask: URLSessionWebSocketTask?
     private let roomID: Int
     
@@ -295,11 +299,35 @@ class Websocket: ObservableObject {
     }
     
     private func connect() {
-        guard let url = URL(string: "wss://api.paletteapp.xyz/ws/\(roomID)") else { return }
-        let request = URLRequest(url: url)
+        guard let url = URL(string: "wss://api.paletteapp.xyz/ws/\(roomID)") else {
+            print("Invalid URL")
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        
+        // Add authentication token to the request
+        let headers = getHeaders()
+        headers.forEach { header in
+            request.setValue(header.value, forHTTPHeaderField: header.name)
+        }
+        
         webSocketTask = URLSession.shared.webSocketTask(with: request)
         webSocketTask?.resume()
+        print("WebSocket connected successfully.")
         receiveMessage()
+    }
+    
+    private func getHeaders() -> HTTPHeaders {
+        let token: String
+        if let tokenData = KeychainManager.load(key: "accessToken"),
+           let tokenString = String(data: tokenData, encoding: .utf8) {
+            token = tokenString
+        } else {
+            token = ""
+        }
+        
+        return ["x-auth-token": token]
     }
     
     private func receiveMessage() {
@@ -314,11 +342,18 @@ class Websocket: ObservableObject {
                     print("Received WebSocket message: \(text)")
                     if let data = text.data(using: .utf8) {
                         do {
-                            let response = try JSONDecoder().decode(WebSocketResponse.self, from: data)
-                            if response.type == "NEW_CHAT" {
-                                DispatchQueue.main.async {
-                                    self?.messages.append(response.data.message)
+                            let baseResponse = try JSONDecoder().decode(WebSocketResponseBase.self, from: data)
+                            switch baseResponse.type {
+                            case .NEW_CHAT:
+                                let response = try JSONDecoder().decode(WebSocketResponse<WebSocketSuccessResponseData>.self, from: data)
+                                if let chatMessage = response.data.message {
+                                    DispatchQueue.main.async {
+                                        self?.messages.append(chatMessage)
+                                    }
                                 }
+                            case .ERROR:
+                                let response = try JSONDecoder().decode(WebSocketResponse<WebSocketFailResponseData>.self, from: data)
+                                print("WebSocket Error: \(response.data.message ?? "Unknown error")")
                             }
                         } catch {
                             print("WebSocket Decoding Error: \(error.localizedDescription)")
@@ -342,17 +377,34 @@ class Websocket: ObservableObject {
     }
 }
 
-struct WebSocketResponse: Codable {
-    let type: String
-    let data: WebSocketData
-}
-
-struct WebSocketData: Codable {
-    let action: String
-    let message: ChatMessageModel
+struct WebSocketResponseBase: Decodable {
+    let type: MessageType
 }
 
 enum ResourceType: String, Codable {
-    case CHAT
+    case TEXT
     case IMAGE
+    case START
+    case PROMPT
+    case END
+}
+
+enum MessageType: String, Codable {
+    case ERROR
+    case NEW_CHAT
+}
+
+struct WebSocketResponse<T: Decodable>: Decodable {
+    let type: MessageType
+    var data: T
+}
+
+struct WebSocketSuccessResponseData: Codable {
+    let action: ResourceType
+    let message: ChatMessageModel?
+}
+
+struct WebSocketFailResponseData: Codable {
+    let kind: String?
+    let message: String?
 }
