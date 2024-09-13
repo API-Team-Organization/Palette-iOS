@@ -7,6 +7,14 @@ struct SettingView: View {
     @State var uName: String = "유저"
     @State var isUserNameLoaded: Bool = false
     @State private var refreshID = UUID()
+    @State private var showingLogoutAlert = false
+    
+    let fail_alert = Alert(title: "로그아웃 실패",
+                      message: "로그아웃에 실패했습니다.",
+                      dismissButton: .default("확인"))
+    let success_alert = Alert(title: "로그아웃 성공",
+                      message: "성공적으로 로그아웃하였습니다.",
+                      dismissButton: .default("확인"))
     
     func getHeaders() -> HTTPHeaders {
         let token: String
@@ -43,9 +51,19 @@ struct SettingView: View {
                     print("Error: \(error.localizedDescription)")
                     if let data = response.data, let str = String(data: data, encoding: .utf8) {
                         print("Raw response: \(str)")
-                    }
                 }
             }
+        }
+    }
+    
+    func userLogout() {
+        let status = KeychainManager.delete(key: "accessToken")
+        if status == noErr {
+            flow.replace([StartView()], animated: true)
+            flow.alert(success_alert, animated: true)
+        } else {
+            flow.alert(fail_alert, animated: true)
+        }
     }
     
     var body: some View {
@@ -93,7 +111,7 @@ struct SettingView: View {
                     .padding(.bottom, 57)
                 
                 Button(action: {
-                    flow.push(Text("Logout"))
+                    showingLogoutAlert = true
                 }) {
                     HStack {
                         VStack(alignment: .leading){
@@ -108,6 +126,16 @@ struct SettingView: View {
                             .frame(width: 7, height: 11)
                             .padding(.trailing, 20)
                     }
+                }
+                .alert(isPresented: $showingLogoutAlert) {
+                    Alert(
+                        title: Text("로그아웃"),
+                        message: Text("정말 로그아웃하시겠습니까?"),
+                        primaryButton: .destructive(Text("예")) {
+                            userLogout()
+                        },
+                        secondaryButton: .cancel(Text("아니요"))
+                    )
                 }
                 .padding(.bottom, 32)
                 
