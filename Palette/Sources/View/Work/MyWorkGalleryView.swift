@@ -36,7 +36,7 @@ struct MyWorkGalleryView: View {
                         self.isFullScreenPresented = true
                     }, onSave: { imageUrl in
                         saveImageToGallery(imageUrl: imageUrl)
-                    }, onAppear: {
+                    }, onLoadMore: {
                         if !isLoading && hasMorePages {
                             loadMoreImages()
                         }
@@ -69,25 +69,25 @@ struct MyWorkGalleryView: View {
     }
     
     func loadMoreImages() {
-        guard !isLoading && hasMorePages else { return }
-        isLoading = true
-        
-        let url = "https://api.paletteapp.xyz/chat/my-image"
-        let parameters: [String: Any] = ["page": page, "size": 10]
-        
-        AF.request(url, method: .get, parameters: parameters, headers: getHeaders())
-            .responseDecodable(of: ImageResponse.self) { response in
-                isLoading = false
-                switch response.result {
-                case .success(let imageResponse):
-                    self.images.append(contentsOf: imageResponse.data)
-                    self.page += 1
-                    self.hasMorePages = !imageResponse.data.isEmpty
-                case .failure(let error):
-                    print("Error loading images: \(error)")
+            guard !isLoading && hasMorePages else { return }
+            isLoading = true
+            
+            let url = "https://api.paletteapp.xyz/chat/my-image"
+            let parameters: [String: Any] = ["page": page, "size": 10]
+            
+            AF.request(url, method: .get, parameters: parameters, headers: getHeaders())
+                .responseDecodable(of: ImageResponse.self) { response in
+                    isLoading = false
+                    switch response.result {
+                    case .success(let imageResponse):
+                        self.images.append(contentsOf: imageResponse.data)
+                        self.page += 1
+                        self.hasMorePages = !imageResponse.data.isEmpty
+                    case .failure(let error):
+                        print("Error loading images: \(error)")
+                    }
                 }
-            }
-    }
+        }
     
     func getHeaders() -> HTTPHeaders {
         let token: String
@@ -114,13 +114,14 @@ struct MyWorkGalleryView: View {
             }
         }
     }
+    
 }
 
 struct GridView: View {
     let images: [String]
     let onImageTap: (UIImage) -> Void
     let onSave: (String) -> Void
-    let onAppear: () -> Void
+    let onLoadMore: () -> Void
     
     let columns = [
         GridItem(.flexible()),
@@ -157,7 +158,13 @@ struct GridView: View {
             .padding()
             .padding(.bottom, 75)
         }
-        .onAppear(perform: onAppear)
+        .onChange(of: images) { _ in
+            if !images.isEmpty {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    onLoadMore()
+                }
+            }
+        }
     }
 }
 
