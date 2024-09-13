@@ -144,6 +144,7 @@ struct ProfileEditView: View {
                 HStack {
                     Text("이메일")
                         .font(.custom("SUIT-Bold", size: 16))
+                        .foregroundColor(Color.black)
                     Spacer()
                     Text(uEmail)
                         .font(.custom("SUIT-Regular", size: 16))
@@ -183,6 +184,7 @@ struct ProfileEditView: View {
         .alert(isPresented: $showingErrorAlert) {
             Alert(title: Text("오류"), message: Text(errorMessage), dismissButton: .default(Text("확인")))
         }
+        .background(Color("BackgroundColor"))
         .navigationBarBackButtonHidden(true)
     }
     
@@ -191,6 +193,8 @@ struct ProfileEditView: View {
             HStack {
                 Text(title)
                     .font(.custom("SUIT-Bold", size: 16))
+                    .foregroundColor(Color.black)
+
                 Spacer()
                 Text(value)
                     .font(.custom("SUIT-Regular", size: 16))
