@@ -67,7 +67,6 @@ struct SettingView: View {
     }
     
     var body: some View {
-        NavigationView {
             VStack {
                 HStack {
                     Text("설정")
@@ -167,6 +166,5 @@ struct SettingView: View {
                 getProfileData()
                 refreshID = UUID()  // View를 강제로 새로고침
             }
-        }
     }
 }
