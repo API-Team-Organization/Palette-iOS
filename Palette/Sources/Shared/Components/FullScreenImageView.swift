@@ -7,7 +7,7 @@ struct FullScreenImageView: View {
     @State private var lastScale: CGFloat = 1.0
     @State private var offset = CGSize.zero
     @State private var lastOffset = CGSize.zero
-
+    
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -17,7 +17,7 @@ struct FullScreenImageView: View {
                 Image(uiImage: image)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: geometry.size.width - 40) // 양쪽에 20px 여백
+                    .frame(width: geometry.size.width - 40)
                     .scaleEffect(scale)
                     .offset(offset)
                     .gesture(

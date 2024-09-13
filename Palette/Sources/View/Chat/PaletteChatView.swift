@@ -104,53 +104,57 @@ struct PaletteChatView: View {
                         }
                     }
                 }
+
                 
                 // 메시지 입력 영역
-                HStack(alignment: .bottom) {
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 20)
-                            .frame(height: max(40, textEditorHeight))
-                            .foregroundStyle(Color("ChatTextFieldBack"))
-                        
-                        TextEditor(text: $messageText)
-                            .font(.custom("SUIT-Medium", size: 15))
-                            .foregroundStyle(Color.black)
-                            .padding(.horizontal, 15)
-                            .padding(.vertical, 10)
-                            .frame(height: max(40, textEditorHeight))
-                            .scrollContentBackground(.hidden)
-                            .onChange(of: messageText) { _ in
-                                withAnimation {
-                                    updateTextEditorHeight()
+                VStack(spacing: 0) {
+                                    HStack(alignment: .bottom, spacing: 10) {
+                                        ZStack(alignment: .leading) {
+                                            TextEditor(text: $messageText)
+                                                .font(.custom("SUIT-Medium", size: 15))
+                                                .foregroundStyle(Color.black)
+                                                .padding(.horizontal, 15)
+                                                .padding(.vertical, 10)
+                                                .frame(height: max(40, textEditorHeight))
+                                                .scrollContentBackground(.hidden)
+                                                .background(Color.clear)
+                                                .onChange(of: messageText) { _ in
+                                                    withAnimation {
+                                                        updateTextEditorHeight()
+                                                    }
+                                                }
+                                                .focused($isInputFocused)
+                                            
+                                            if messageText.isEmpty {
+                                                Text("당신의 Palette를 그려보세요")
+                                                    .foregroundColor(.gray)
+                                                    .padding(.horizontal, 20)
+                                                    .padding(.vertical, 12)
+                                                    .font(.custom("SUIT-Medium", size: 15))
+                                            }
+                                        }
+                                        .background(Color("ChatTextFieldBack"))
+                                        .cornerRadius(20)
+                                        
+                                        Button(action: sendMessage) {
+                                            Image(systemName: "paperplane.fill")
+                                                .foregroundColor(isMessageValid ? Color("AccentColor") : Color.gray)
+                                                .padding(10)
+                                                .background(Color("ChatTextFieldBack"))
+                                                .clipShape(Circle())
+                                        }
+                                        .disabled(!isMessageValid)
+                                    }
+                                    .padding(.horizontal)
+                                    .padding(.top, 10)
+                                    .padding(.bottom, 20)
+                                    .background(Color.white)
+                                    .cornerRadius(20, corners: [.topLeft, .topRight])
                                 }
                             }
-                            .focused($isInputFocused)
-                        
-                        if messageText.isEmpty {
-                            Text("당신의 Palette를 그려보세요")
-                                .foregroundColor(.gray)
-                                .padding(.horizontal, 20)
-                                .padding(.vertical, 12)
-                                .font(.custom("SUIT-Medium", size: 15))
-                        }
-                    }
-                    
-                    Button(action: sendMessage) {
-                        Image(systemName: "paperplane.fill")
-                            .foregroundColor(isMessageValid ? Color("AccentColor") : Color.gray)
-                            .padding(10)
-                            .background(Color("ChatTextFieldBack"))
-                            .clipShape(Circle())
-                    }
-                    .disabled(!isMessageValid)
-                }
-                .padding(.horizontal)
-                .padding(.top, 5)
-                .padding(.bottom, 20)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.white)
-            .navigationBarHidden(true)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(Color.white)
+                            .navigationBarHidden(true)
             
             if isFullscreenPresented, let image = fullscreenImage {
                 FullScreenImageView(image: image, isPresented: $isFullscreenPresented)
