@@ -49,7 +49,26 @@ struct VerifyCodeInputView: View {
                 switch response.result {
                     
                 case .success(_):
-                    flow.replace([RegisterFinView()], animated: true)
+                    if let headers = response.response?.allHeaderFields,
+                       let token = headers["x-auth-token"] as? String {
+                        print("Received token: \(token)")
+                        
+                        // KeyChain에 토큰 저장
+                        if let tokenData = token.data(using: .utf8) {
+                            let saveStatus = KeychainManager.save(key: "accessToken", data: tokenData)
+                            if saveStatus == noErr {
+                                print("Token successfully saved to KeyChain")
+                                flow.replace([RegisterFinView()], animated: true)
+                            } else {
+                                print("Failed to save token to KeyChain. Status: \(saveStatus)")
+                            }
+                        } else {
+                            print("Failed to convert token to Data")
+                        }
+                    } else {
+                        print("No token found in response headers")
+                        flow.alert(fail_alert)
+                    }
                     
                 case .failure(let error):
                     flow.alert(fail_alert)
