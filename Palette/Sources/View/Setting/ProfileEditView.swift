@@ -1,3 +1,11 @@
+//
+//  ProfileEditView.swift
+//  Palette
+//
+//  Created by 4rNe5 on 9/13/24.
+//
+
+
 import SwiftUI
 import FlowKit
 import Alamofire
