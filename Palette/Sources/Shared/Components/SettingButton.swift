@@ -5,6 +5,7 @@
 //  Created by 4rNe5 on 9/11/24.
 //
 import SwiftUI
+import UIKit
 import FlowKit
 
 enum settingPage {
@@ -19,7 +20,6 @@ struct SettingButton: View {
     var buttonTitle: String
     var settingPage: settingPage
     
-
     
     var body: some View {
         Button(action: {
@@ -27,7 +27,7 @@ struct SettingButton: View {
             case .notification:
                 flow.push(Text("Notification"))
             case .privacy:
-                flow.push(Text("privacy"))
+                OpenURL(url: "https://dgsw-team-api.notion.site/cc32c87f614e4798893293abfe5ca72a?pvs=74")
             case .evolved:
                 flow.push(Text("evolved"))
             case .appinfo:

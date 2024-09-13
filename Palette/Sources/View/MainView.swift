@@ -1,10 +1,3 @@
-//
-//  MainView.swift
-//  Palette
-//
-//  Created by 4rNe5 on 6/27/24.
-//
-
 import SwiftUI
 import RiveRuntime
 import FlowKit
@@ -12,6 +5,7 @@ import FlowKit
 struct MainView: View {
     @State private var selectedTab: Tab = .home
     @StateObject private var tabbar: RiveTabbarVM
+    @State private var isFullScreenImagePresented = false
     
     init() {
         _tabbar = StateObject(wrappedValue: RiveTabbarVM(selectedTab: .home))
@@ -23,7 +17,7 @@ struct MainView: View {
             
             switch selectedTab {
             case .search:
-                MyWorkGalleryView()
+                MyWorkGalleryView(isFullScreenPresented: $isFullScreenImagePresented)
             case .home:
                 ChatListView()
             case .setting:
@@ -34,7 +28,9 @@ struct MainView: View {
                 ForEach(0..<86) { _ in
                     Spacer()
                 }
-                tabbar.view()
+                if !isFullScreenImagePresented {
+                    tabbar.view()
+                }
             }
             .onChange(of: tabbar.selectedTab) { newValue in
                 selectedTab = newValue
