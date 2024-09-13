@@ -4,7 +4,8 @@
 //
 //  Created by 4rNe5 on 9/13/24.
 //
-
+import SwiftUI
+import Kingfisher
 
 struct GridView: View {
     let images: [String]

@@ -42,7 +42,13 @@ struct MyWorkGalleryView: View {
                         }
                     })
                 } else if selectedTab == 1 {
-                    Text("동영상 기능은 아직 구현되지 않았습니다.")
+                    VStack(alignment: .center){
+                        Spacer()
+                        Text("동영상 기능은 아직 구현되지 않았습니다.")
+                            .foregroundStyle(.black)
+                            .font(.custom("SUIT-Bold", size: 18))
+                        Spacer()
+                    }
                 }
                 
                 if isLoading {
