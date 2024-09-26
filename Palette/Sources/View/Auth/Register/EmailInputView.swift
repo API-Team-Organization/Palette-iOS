@@ -38,6 +38,7 @@ struct EmailInputView: View {
                 .padding(.bottom, 30)
                 HStack {
                     TextField("email",text: $email, prompt: Text("이메일").foregroundStyle(Color("DescText")))
+                        .textInputAutocapitalization(.never)
                         .padding(.leading, 10)
                         .frame(width:363, height: 55)
                         .background(Color("TextFieldBack"))
