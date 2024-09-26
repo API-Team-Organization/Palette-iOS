@@ -93,6 +93,7 @@ struct NameInputView: View {
                 .padding(.bottom, 30)
                 HStack {
                     TextField("email", text: $userName, prompt: Text("이름").foregroundStyle(Color("DescText")))
+                        .textInputAutocapitalization(.never)
                         .padding(.leading, 10)
                         .frame(width:363, height: 55)
                         .background(Color("TextFieldBack"))

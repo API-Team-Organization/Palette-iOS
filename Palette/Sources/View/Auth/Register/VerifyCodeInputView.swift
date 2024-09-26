@@ -120,6 +120,7 @@ struct VerifyCodeInputView: View {
             
                 HStack {
                     TextField("verifycode",text: $verifyCode, prompt: Text("인증번호").foregroundStyle(Color("DescText")))
+                        .keyboardType(.numberPad)
                         .padding(.leading, 10)
                         .frame(width:363, height: 55)
                         .background(Color("TextFieldBack"))
