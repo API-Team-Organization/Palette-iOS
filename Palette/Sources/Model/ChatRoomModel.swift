@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct ChatRoomModel: Identifiable, Decodable {
+struct ChatRoomModel: Identifiable, Codable {
     let id: Int
     let title: String
     let message: String?

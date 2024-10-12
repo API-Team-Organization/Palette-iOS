@@ -8,6 +8,5 @@
 import Foundation
 
 struct ChatroomNameFetchModel: Codable {
-    let id: Int
     let title: String
 }
