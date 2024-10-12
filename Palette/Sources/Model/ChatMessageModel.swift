@@ -1,17 +1,22 @@
 import Foundation
 
 struct ChatMessageModel: Codable, Identifiable, Equatable {
-    let id: Int?
+    let id: String
     let message: String
+    let resource: ResourceType
     let datetime: String
     let roomId: Int
     let userId: Int
+    let promptId: String?
     let isAi: Bool
-    let resource: ResourceType
     
     enum ResourceType: String, Codable {
         case CHAT
         case IMAGE
+        case PROMPT
+    }
+    enum CodingKeys: String, CodingKey {
+        case id, message, resource, datetime, roomId, userId, isAi, promptId
     }
     
     var date: Date {

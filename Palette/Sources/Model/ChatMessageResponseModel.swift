@@ -13,6 +13,7 @@ struct ChatMessageResponseModel: Codable {
     let data: ChatMessageResponseData
 }
 
+
 struct ChatMessageResponseData: Codable {
     let received: [ChatMessageModel]
 }
