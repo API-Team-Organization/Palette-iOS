@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import Alamofire
 import FlowKit
 
 struct VerifyCodeInputView: View {
@@ -25,74 +24,35 @@ struct VerifyCodeInputView: View {
                       message: "메일함을 확인해주세요.",
                       dismissButton: .default("확인"))
     
-    func getHeaders() -> HTTPHeaders {
-        let token: String
-        if let tokenData = KeychainManager.load(key: "accessToken"),
-           let tokenString = String(data: tokenData, encoding: .utf8) {
-            token = tokenString
-        } else {
-            token = ""
-        }
-        
-        let headers: HTTPHeaders = [
-            "x-auth-token": token
-        ]
-        return headers
-    }
-    
     func handleVerifyCode() async {
-        let url = "https://api.paletteapp.xyz/auth/verify"
         let credentials = VerifyCodeModel(code: verifyCode)
         
-        AF.request(url, method: .post, parameters: credentials, encoder: JSONParameterEncoder.default, headers: getHeaders())
-            .responseData { response in
-                switch response.result {
-                    
-                case .success(_):
-                    if let headers = response.response?.allHeaderFields,
-                       let token = headers["x-auth-token"] as? String {
-                        print("Received token: \(token)")
-                        
-                        // KeyChain에 토큰 저장
-                        if let tokenData = token.data(using: .utf8) {
-                            let saveStatus = KeychainManager.save(key: "accessToken", data: tokenData)
-                            if saveStatus == noErr {
-                                print("Token successfully saved to KeyChain")
-                                flow.replace([RegisterFinView()], animated: true)
-                            } else {
-                                print("Failed to save token to KeyChain. Status: \(saveStatus)")
-                            }
-                        } else {
-                            print("Failed to convert token to Data")
-                        }
-                    } else {
-                        print("No token found in response headers")
-                        flow.alert(fail_alert)
-                    }
-                    
-                case .failure(let error):
-                    flow.alert(fail_alert)
-                    
+        
+        guard let tokenData = KeychainManager.load(key: "accessToken"), let tokenOld = String(data: tokenData, encoding: .utf8) else {return}
+        
+        let res = await PaletteNetworking.post("/auth/verify", parameters: credentials, res: EmptyResModel.self)
+        switch res {
+        case .success(_):
+            if let newData = KeychainManager.load(key: "accessToken"), let tokenNew = String(data: newData, encoding: .utf8) {
+                if tokenOld != tokenNew { // token updated!
+                    flow.replace([RegisterFinView()], animated: true)
                 }
             }
+            
+        case .failure(let error):
+            flow.alert(fail_alert)
+            
+        }
     }
     
     func handleResendVerifyCode() async {
-        let url = "https://api.paletteapp.xyz/auth/resend"
-    
-        
-        AF.request(url, method: .post, headers: getHeaders())
-            .responseData { response in
-                switch response.result {
-                    
-                case .success(_):
-                    flow.alert(resend_notif)
-                    
-                case .failure(let error):
-                    flow.alert(fail_alert)
-                    
-                }
-            }
+        let res = await PaletteNetworking.post("/auth/resend", res: EmptyResModel.self)
+        switch res {
+        case .success(_):
+            flow.alert(resend_notif)
+        case .failure(let error):
+            flow.alert(fail_alert)
+        }
     }
     
     

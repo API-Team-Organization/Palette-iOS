@@ -12,6 +12,13 @@ class KeychainManager {
         return SecItemAdd(query as CFDictionary, nil)
     }
     
+    static func fromResponse(response: HTTPURLResponse) {
+        if let token = response.value(forHTTPHeaderField: "x-auth-token"), let tokenData = token.data(using: .utf8) {
+            print("Received token: \(token)")
+            let saveStatus = KeychainManager.save(key: "accessToken", data: tokenData)
+        }
+    }
+    
     static func load(key: String) -> Data? {
         let query = [
             kSecClass as String: kSecClassGenericPassword,

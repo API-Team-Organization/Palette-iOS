@@ -7,7 +7,6 @@
 
 import SwiftUI
 import FlowKit
-import Alamofire
 
 extension View {
     func endTextEditing() {
@@ -19,6 +18,7 @@ struct LoginView: View {
     
     @State var email: String = ""
     @State var password: String = ""
+    @State private var isLoginWorking = false
     @State private var showingfailAlert = false
     @State private var showinginputAlert = false
     @Environment(\.presentationMode) var presentationMode
@@ -33,41 +33,25 @@ struct LoginView: View {
     
     
     func handleLogin() async {
-        let url = "https://api.paletteapp.xyz/auth/login"
-        let credentials = LoginRequestModel(email: email, password: password)
         
-        AF.request(url,
-                   method: .post,
-                   parameters: credentials,
-                   encoder: JSONParameterEncoder.default)
-            .responseData { response in
-                switch response.result {
-                case .success(_):
-                    if let headers = response.response?.allHeaderFields,
-                       let token = headers["x-auth-token"] as? String {
-                        print("Received token: \(token)")
-                        
-                        // KeyChain에 토큰 저장
-                        if let tokenData = token.data(using: .utf8) {
-                            let saveStatus = KeychainManager.save(key: "accessToken", data: tokenData)
-                            if saveStatus == noErr {
-                                print("Token successfully saved to KeyChain")
-                                flow.replace([MainView()])
-                            } else {
-                                print("Failed to save token to KeyChain. Status: \(saveStatus)")
-                            }
-                        } else {
-                            print("Failed to convert token to Data")
-                        }
-                    } else {
-                        print("No token found in response headers")
-                        flow.alert(fail_alert)
-                    }
-                case .failure(let error):
-                    print("Error: \(error)")
-                    flow.alert(fail_alert)
-                }
+        let post = await PaletteNetworking.post("/auth/login", parameters: LoginRequestModel(email: email, password: password), res: EmptyResModel.self)
+        
+        if let tokenData = KeychainManager.load(key: "accessToken"), let _ = String(data: tokenData, encoding: .utf8) {
+            await MainActor.run {
+                flow.replace([MainView()]) // accessToken exists check
+            }
+            return
         }
+    
+        await MainActor.run {
+            failHandler();
+        }
+    }
+    
+    @MainActor
+    func failHandler() {
+        isLoginWorking = false
+        flow.alert(fail_alert)
     }
     
     var body: some View {
@@ -128,10 +112,12 @@ struct LoginView: View {
                         flow.alert(input_alert)
                         
                     } else {
+                        isLoginWorking = true
                         Task { await handleLogin() }
                     }
                 }) {
                     Text("로그인")
+                        .disabled(isLoginWorking)
                         .font(.custom("Pretendard-ExtraBold", size: 16))
                         .fontWeight(.bold)
                         .foregroundColor(.white)

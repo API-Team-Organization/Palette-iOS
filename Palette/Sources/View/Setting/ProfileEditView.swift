@@ -8,7 +8,6 @@
 
 import SwiftUI
 import FlowKit
-import Alamofire
 
 struct ProfileEditView: View {
     @Flow var flow
@@ -17,7 +16,7 @@ struct ProfileEditView: View {
     @State private var uBirthday: Date = Date()
     
     @State private var originalName: String = ""
-    @State private var originalBirthday: Date = Date()
+    @State private var originalBirthday: String = ""
     
     @State private var isUserNameLoaded: Bool = false
     
@@ -38,75 +37,50 @@ struct ProfileEditView: View {
     }
     
     var isProfileChanged: Bool {
-        return uName != originalName || uBirthday != originalBirthday
+        return uName != originalName || formatDate(uBirthday) != originalBirthday
     }
     
-    func getHeaders() -> HTTPHeaders {
-        let token: String
-        if let tokenData = KeychainManager.load(key: "accessToken"),
-           let tokenString = String(data: tokenData, encoding: .utf8) {
-            token = tokenString
-        } else {
-            token = ""
-        }
-        let headers: HTTPHeaders = [
-            "x-auth-token": token
-        ]
-        return headers
+    var formatter: DateFormatter {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
     }
     
     func getProfileData() async {
-        let url = "https://api.paletteapp.xyz/info/me"
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .formatted(dateFormatter)
-        AF.request(url, method: .get, headers: getHeaders())
-            .validate(statusCode: 200..<300)
-            .responseDecodable(of: ProfileResponseModel<ProfileDataModel>.self, decoder: decoder) { response in
-                switch response.result {
-                case .success(let profileResponse):
-                    debugPrint(profileResponse.data)
-                    uName = profileResponse.data.name
-                    uEmail = profileResponse.data.email
-                    uBirthday = profileResponse.data.birthDate
-                    originalName = profileResponse.data.name
-                    originalBirthday = profileResponse.data.birthDate
-                case .failure(let error):
-                    print("Error: \(error.localizedDescription)")
-                    if let data = response.data, let str = String(data: data, encoding: .utf8) {
-                        print("Raw response: \(str)")
-                    }
-                }
+        let result = await PaletteNetworking.get("/info/me", res: DataResModel<ProfileDataModel>.self)
+        switch result {
+        case .success(let profileResponse):
+            await MainActor.run {
+                uName = profileResponse.data.name
+                uEmail = profileResponse.data.email
+                uBirthday = formatter.date(from: profileResponse.data.birthDate) ?? Date()
+                originalName = profileResponse.data.name
+                originalBirthday = profileResponse.data.birthDate
             }
+        case .failure(let error):
+            print(error.localizedDescription)
+        }
     }
     
-    func saveProfileData() {
-        let url = "https://api.paletteapp.xyz/info/me"
-        let parameters: [String: Any] = [
-            "username": uName,
-            "birthDate": formatDate(uBirthday)
-        ]
+    func saveProfileData() async {
+        let parameters = ProfileEditRequestModel(username: uName, birthDate: formatDate(uBirthday))
         
-        AF.request(url, method: .patch, parameters: parameters, encoding: JSONEncoding.default, headers: getHeaders())
-            .validate(statusCode: 200..<300)
-            .responseDecodable(of: ProfileEditResponseModel.self) { response in
-                switch response.result {
-                case .success(_):
-                    showingSaveAlert = true
-                    originalName = uName
-                    originalBirthday = uBirthday
-                    presentationMode.wrappedValue.dismiss()
-                    flow.alert(comp_alert, animated: true)
-                case .failure(let error):
-                    print("Error: \(error.localizedDescription)")
-                    if let data = response.data, let str = String(data: data, encoding: .utf8) {
-                        print("Raw response: \(str)")
-                    }
-                    errorMessage = "프로필 저장에 실패했습니다."
-                    showingErrorAlert = true
-                }
+        let result = await PaletteNetworking.patch("/info/me", parameters: parameters, res: EmptyResModel.self)
+        await MainActor.run {
+            switch result {
+            case .success(_):
+                showingSaveAlert = true
+                originalName = uName
+                originalBirthday = formatDate(uBirthday)
+                presentationMode.wrappedValue.dismiss()
+                flow.alert(comp_alert, animated: true)
+            case .failure(let error):
+                print("Error: \(error.localizedDescription)")
+                errorMessage = "프로필 저장에 실패했습니다."
+                showingErrorAlert = true
             }
+            
+        }
     }
     
     var body: some View {
@@ -157,7 +131,11 @@ struct ProfileEditView: View {
             Spacer()
             
             if isProfileChanged {
-                Button(action: saveProfileData) {
+                Button(action: {
+                    Task {
+                        await saveProfileData()
+                    }
+                }) {
                     Text("수정하기")
                         .font(.custom("SUIT-ExtraBold", size: 16))
                         .fontWeight(.bold)
@@ -241,8 +219,6 @@ struct ProfileEditView: View {
     }
     
     func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
         return formatter.string(from: date)
     }
 }

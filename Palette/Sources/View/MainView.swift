@@ -32,7 +32,7 @@ struct MainView: View {
                     tabbar.view()
                 }
             }
-            .onChange(of: tabbar.selectedTab) { newValue in
+            .onChange(of: tabbar.selectedTab) { old, newValue in
                 selectedTab = newValue
             }
         }

@@ -1,5 +1,4 @@
 import SwiftUI
-import Alamofire
 import FlowKit
 
 struct SettingView: View {
@@ -16,53 +15,24 @@ struct SettingView: View {
                       message: "성공적으로 로그아웃하였습니다.",
                       dismissButton: .default("확인"))
     
-    func getHeaders() -> HTTPHeaders {
-        let token: String
-        if let tokenData = KeychainManager.load(key: "accessToken"),
-           let tokenString = String(data: tokenData, encoding: .utf8) {
-            token = tokenString
-        } else {
-            token = ""
-        }
-
-        let headers: HTTPHeaders = [
-            "x-auth-token": token
-        ]
-        return headers
-    }
-    
-    func getProfileData() {
-        let url = "https://api.paletteapp.xyz/info/me"
-
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .formatted(dateFormatter)
-
-        AF.request(url, method: .get, headers: getHeaders())
-            .validate(statusCode: 200..<300)
-            .responseDecodable(of: ProfileResponseModel<ProfileDataModel>.self, decoder: decoder) { response in
-                switch response.result {
-                case .success(let profileResponse):
-                    print(profileResponse.data.name)
-                    uName = profileResponse.data.name
-                case .failure(let error):
-                    print("Error: \(error.localizedDescription)")
-                    if let data = response.data, let str = String(data: data, encoding: .utf8) {
-                        print("Raw response: \(str)")
-                }
+    func getProfileData() async {
+        let result = await PaletteNetworking.get("/info/me", res: DataResModel<ProfileDataModel>.self)
+        switch result {
+        case .success(let profileResponse):
+            await MainActor.run {
+                uName = profileResponse.data.name
             }
+        case .failure(let error):
+            print(error.localizedDescription)
         }
     }
     
-    func userLogout() {
-        let status = KeychainManager.delete(key: "accessToken")
-        if status == noErr {
+    func userLogout() async {
+        let _ = await PaletteNetworking.post("/auth/logout", res: EmptyResModel.self)
+        let _ = KeychainManager.delete(key: "accessToken") // 아니이러지마세요제발
+        
+        await MainActor.run {
             flow.replace([StartView()], animated: true)
-            flow.alert(success_alert, animated: true)
-        } else {
-            flow.alert(fail_alert, animated: true)
         }
     }
     
@@ -131,7 +101,7 @@ struct SettingView: View {
                         title: Text("로그아웃"),
                         message: Text("정말 로그아웃하시겠습니까?"),
                         primaryButton: .destructive(Text("예")) {
-                            userLogout()
+                            Task{await userLogout()}
                         },
                         secondaryButton: .cancel(Text("아니요"))
                     )
@@ -160,11 +130,17 @@ struct SettingView: View {
             }
             .id(refreshID)  // View를 강제로 새로고침하기 위한 id
             .onAppear {
-                getProfileData()
+                Task {
+                    await getProfileData()
+                }
             }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
-                getProfileData()
-                refreshID = UUID()  // View를 강제로 새로고침
+                Task {
+                    await getProfileData()
+                    await MainActor.run {
+                        refreshID = UUID()  // View를 강제로 새로고침
+                    }
+                }
             }
     }
 }

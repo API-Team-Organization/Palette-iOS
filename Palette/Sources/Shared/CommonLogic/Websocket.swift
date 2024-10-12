@@ -7,12 +7,15 @@
 import Foundation
 import Combine
 import SwiftUI
-import Alamofire
 
 class Websocket: ObservableObject {
-    @Published var messages = [ChatMessageModel]()
     private var webSocketTask: URLSessionWebSocketTask?
     private let roomID: Int
+    private var onMessage: ((ChatMessageModel) -> ())?
+    
+    func setMessageCallback(onMessage: @escaping (ChatMessageModel) -> ()) {
+        self.onMessage = onMessage
+    }
     
     init(roomID: Int) {
         self.roomID = roomID
@@ -30,7 +33,7 @@ class Websocket: ObservableObject {
         // Add authentication token to the request
         let headers = getHeaders()
         headers.forEach { header in
-            request.setValue(header.value, forHTTPHeaderField: header.name)
+            request.setValue(header.value, forHTTPHeaderField: header.key)
         }
         
         webSocketTask = URLSession.shared.webSocketTask(with: request)
@@ -39,7 +42,7 @@ class Websocket: ObservableObject {
         receiveMessage()
     }
     
-    private func getHeaders() -> HTTPHeaders {
+    private func getHeaders() -> [String: String] {
         let token: String
         if let tokenData = KeychainManager.load(key: "accessToken"),
            let tokenString = String(data: tokenData, encoding: .utf8) {
@@ -60,21 +63,20 @@ class Websocket: ObservableObject {
             case .success(let message):
                 switch message {
                 case .string(let text):
-                    print("Received WebSocket message: \(text)")
                     if let data = text.data(using: .utf8) {
                         do {
                             let baseResponse = try JSONDecoder().decode(WebSocketResponseBase.self, from: data)
                             switch baseResponse.type {
                             case .NEW_CHAT:
-                                let response = try JSONDecoder().decode(WebSocketResponse<WebSocketSuccessResponseData>.self, from: data)
-                                if let chatMessage = response.data.message {
-                                    DispatchQueue.main.async {
-                                        self?.messages.append(chatMessage)
-                                    }
+                                let response = try JSONDecoder().decode(ChatMessageModel.self, from: data)
+                                
+                                DispatchQueue.main.async {
+                                    print("im callin")
+                                    self?.onMessage?(response)
                                 }
                             case .ERROR:
-                                let response = try JSONDecoder().decode(WebSocketResponse<WebSocketFailResponseData>.self, from: data)
-                                print("WebSocket Error: \(response.data.message ?? "Unknown error")")
+                                let response = try JSONDecoder().decode(WebSocketFailResponseData.self, from: data)
+                                print("WebSocket Error: \(response.message ?? "Unknown error")")
                             }
                         } catch {
                             print("WebSocket Decoding Error: \(error.localizedDescription)")
@@ -115,17 +117,8 @@ enum MessageType: String, Codable {
     case NEW_CHAT
 }
 
-struct WebSocketResponse<T: Decodable>: Decodable {
-    let type: MessageType
-    var data: T
-}
-
-struct WebSocketSuccessResponseData: Codable {
-    let action: ResourceType
-    let message: ChatMessageModel?
-}
-
 struct WebSocketFailResponseData: Codable {
+    let type: MessageType
     let kind: String?
     let message: String?
 }

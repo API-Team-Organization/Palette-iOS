@@ -15,7 +15,7 @@ struct QnAData: Codable {
     let id: String
     let type: QnAType
     let question: QuestionDto
-    let answer: AnswerDto
+    let answer: AnswerDto?
     let promptName: String
 }
 
@@ -26,7 +26,7 @@ enum QnAType: String, Codable {
 }
 
 struct QuestionDto: Codable {
-    let type: String
+    let type: String?
     let choices: [Choice]?
     let xSize: Int?
     let ySize: Int?

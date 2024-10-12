@@ -1,5 +1,5 @@
 //
-//  PaletteAlamofire.swift
+//  PaletteNetworking.swift
 //  Palette
 //
 //  Created by jombi on 10/12/24.
@@ -8,7 +8,7 @@
 import Foundation
 import Alamofire
 
-struct PaletteAF {
+struct PaletteNetworking {
     @available(*, unavailable) private init() {}
     
     private static let baseUrl: String = {
@@ -32,6 +32,21 @@ struct PaletteAF {
         return decoder
     }()
     
+    private static func handleDecodingError(error: DecodingError) {
+        switch error {
+        case .dataCorrupted(let context):
+            print("Data corrupted: \(context)")
+        case .keyNotFound(let key, let context):
+            print("Key '\(key)' not found: \(context.debugDescription)")
+        case .typeMismatch(let type, let context):
+            print("Type mismatch for type \(type): \(context.debugDescription)")
+        case .valueNotFound(let type, let context):
+            print("Value of type \(type) not found: \(context.debugDescription)")
+        @unknown default:
+            print("Unknown decoding error: \(error)")
+        }
+    }
+    
     private static func handleResponse<R : Decodable>(_ response: DataResponse<R, AFError>) async -> Result<R, PaletteNetworkingError> {
         do {
             if (400...500).contains(response.response?.statusCode ?? 500) {
@@ -40,6 +55,10 @@ struct PaletteAF {
                         throw PaletteNetworkingError.frontFault(reason: body.message, kind: body.kind)
                 }
             } else {
+                if let response = response.response {
+                    KeychainManager.fromResponse(response: response)
+                } // token update
+                
                 let res = try response.result.get()
                 return .success(res)
             }
@@ -48,19 +67,28 @@ struct PaletteAF {
             case is PaletteNetworkingError:
                 return .failure(error as! PaletteNetworkingError)
             case is DecodingError:
-                switch error as! DecodingError {
-                case .dataCorrupted(let context):
-                    print("Data corrupted: \(context)")
-                case .keyNotFound(let key, let context):
-                    print("Key '\(key)' not found: \(context.debugDescription)")
-                case .typeMismatch(let type, let context):
-                    print("Type mismatch for type \(type): \(context.debugDescription)")
-                case .valueNotFound(let type, let context):
-                    print("Value of type \(type) not found: \(context.debugDescription)")
-                @unknown default:
-                    print("Unknown decoding error: \(error)")
+                if let response = response.data, let data = String(data: response, encoding: String.Encoding.utf8) {
+                    print(data)
                 }
+                handleDecodingError(error: error as! DecodingError)
                 return .failure(PaletteNetworkingError.bodyParseFailed)
+            case is AFError:
+                switch error.asAFError {
+                case .responseSerializationFailed(let reason):
+                    switch reason {
+                    case .decodingFailed(let error):
+                        if let response = response.data, let data = String(data: response, encoding: String.Encoding.utf8) {
+                            print(data)
+                        }
+                        handleDecodingError(error: error as! DecodingError)
+                        return .failure(.bodyParseFailed)
+                    default:
+                        break
+                    }
+                default:
+                    break
+                }
+                return .failure(.unknown)
             default:
                 print(error)
                 return .failure(.unknown)
@@ -85,14 +113,42 @@ struct PaletteAF {
         return await handleResponse(response)
     }
     
-    static func post<T, Parameters: Encodable>(
+    static func sendRaw<Parameters: Encodable>(
         _ path: String,
+        method: HTTPMethod,
         parameters: Parameters? = nil,
+        encoder: ParameterEncoder = JSONParameterEncoder.default,
+        headers: HTTPHeaders? = nil
+    ) -> HTTPURLResponse? {
+        return session
+            .request("\(baseUrl)\(path)", method: method, parameters: parameters, encoder: encoder, headers: headers)
+            .validate()
+            .response
+    }
+    
+    static func post<T>(
+        _ path: String,
         encoder: ParameterEncoder = JSONParameterEncoder.default,
         headers: HTTPHeaders? = nil,
         res: T.Type
     ) async -> Result<T, PaletteNetworkingError> where T : Decodable {
-        let response = await PaletteAF.session
+        let response = await session
+            .request("\(baseUrl)\(path)", method: .post, headers: headers)
+            .validate()
+            .serializingDecodable(res)
+            .response
+        
+        return await handleResponse(response)
+    }
+    
+    static func post<T, Parameters>(
+        _ path: String,
+        parameters: Parameters,
+        encoder: ParameterEncoder = JSONParameterEncoder.default,
+        headers: HTTPHeaders? = nil,
+        res: T.Type
+    ) async -> Result<T, PaletteNetworkingError> where T : Decodable, Parameters: Encodable {
+        let response = await session
             .request("\(baseUrl)\(path)", method: .post, parameters: parameters, encoder: encoder, headers: headers)
             .validate()
             .serializingDecodable(res)
@@ -101,6 +157,7 @@ struct PaletteAF {
         return await handleResponse(response)
     }
     
+    @discardableResult
     static func patch<T, Parameters: Encodable>(
         _ path: String,
         parameters: Parameters? = nil,
@@ -108,7 +165,7 @@ struct PaletteAF {
         headers: HTTPHeaders? = nil,
         res: T.Type
     ) async -> Result<T, PaletteNetworkingError> where T : Decodable {
-        let response = await PaletteAF.session
+        let response = await session
             .request("\(baseUrl)\(path)", method: .patch, parameters: parameters, encoder: encoder, headers: headers)
             .validate()
             .serializingDecodable(res)
@@ -117,12 +174,13 @@ struct PaletteAF {
         return await handleResponse(response)
     }
     
+    @discardableResult
     static func delete<T>(
         _ path: String,
         headers: HTTPHeaders? = nil,
         res: T.Type
     ) async -> Result<T, PaletteNetworkingError> where T : Decodable {
-        let response = await PaletteAF.session
+        let response = await session
             .request("\(baseUrl)\(path)", method: .delete, headers: headers)
             .validate()
             .serializingDecodable(res)

@@ -1,5 +1,4 @@
 import SwiftUI
-import Alamofire
 import FlowKit
 
 struct PaletteChatView: View {
@@ -10,6 +9,7 @@ struct PaletteChatView: View {
     @State private var messageText = ""
     @State var roomTitle = "새 채팅방 이름"
     @State private var messages: [ChatMessageModel] = []
+    @State private var qna: [QnAData] = []
     @State private var textEditorHeight: CGFloat = 40
     @State private var showingRoomTitleAlert = false
     @State private var isLoadingResponse = false
@@ -34,7 +34,8 @@ struct PaletteChatView: View {
     
     enum InputType {
         case text
-        case qna(QnAResponseModel)
+        case qna(QnAData)
+        case unknown
     }
     
     init(roomTitleprop: String?, roomID: Int, isNewRoom: Bool) {
@@ -42,6 +43,13 @@ struct PaletteChatView: View {
         self.roomID = roomID
         self.isNewRoom = isNewRoom
         _websocket = StateObject(wrappedValue: Websocket(roomID: roomID))
+    }
+    
+    @MainActor
+    private func addChat(_ message: ChatMessageModel) {
+        self.messages.append(message)
+        print("new Chat! \(message)")
+        handleLastMessage(message)
     }
     
     var body: some View {
@@ -66,15 +74,12 @@ struct PaletteChatView: View {
             Button("확인") {
                 Task {
                     await updateRoomTitle()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                        loadChatMessages()
-                    }
+                    let (_,_) = await (loadQnA(), loadChatMessages())
                 }
             }
         }, message: {
             Text("새로운 채팅방의 이름을 입력해주세요.")
         })
-        .onReceive(websocket.$messages, perform: handleNewMessages)
     }
     
     private var headerView: some View {
@@ -108,7 +113,7 @@ struct PaletteChatView: View {
         ScrollViewReader { scrollViewProxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 10) {
-                    ForEach(messages + websocket.messages) { message in
+                    ForEach(messages) { message in
                         messageBubble(for: message)
                     }
                     if isLoadingResponse {
@@ -116,8 +121,7 @@ struct PaletteChatView: View {
                     }
                 }
                 .padding()
-                .onChange(of: messages) { _ in scrollToBottom(proxy: scrollViewProxy) }
-                .onChange(of: websocket.messages) { _ in scrollToBottom(proxy: scrollViewProxy) }
+                .onChange(of: messages) { scrollToBottom(proxy: scrollViewProxy) }
             }
             .onAppear { scrollToBottom(proxy: scrollViewProxy) }
         }
@@ -144,20 +148,18 @@ struct PaletteChatView: View {
     
     private func scrollToBottom(proxy: ScrollViewProxy) {
         withAnimation {
-            proxy.scrollTo(messages.last?.id ?? websocket.messages.last?.id, anchor: .bottom)
+            proxy.scrollTo(messages.last?.id, anchor: .bottom)
         }
     }
     
     private var inputView: some View {
-        switch inputType {
+        return switch inputType {
         case .text:
-            return AnyView(textInputView)
-        case .qna(let qnaResponse):
-            if let qnaData = qnaResponse.data.first {
-                return AnyView(QnAInputView(qna: qnaData, onSubmit: submitAnswer))
-            } else {
-                return AnyView(Text("No QnA data available").foregroundColor(.red))
-            }
+            AnyView(textInputView)
+        case .qna(let data):
+            AnyView(QnAInputView(qna: data, onSubmit: submitAnswer))
+        case .unknown:
+            AnyView(Text("No QnA data available").foregroundColor(.red))
         }
     }
     
@@ -173,7 +175,7 @@ struct PaletteChatView: View {
                         .frame(height: max(40, textEditorHeight))
                         .scrollContentBackground(.hidden)
                         .background(Color.clear)
-                        .onChange(of: messageText) { _ in
+                        .onChange(of: messageText) {
                             withAnimation {
                                 updateTextEditorHeight()
                             }
@@ -219,28 +221,15 @@ struct PaletteChatView: View {
     }
     
     private func handleOnAppear() {
+        websocket.setMessageCallback(onMessage: self.addChat)
         if isNewRoom {
             showingRoomTitleAlert = true
         } else {
             roomTitle = roomTitleprop ?? "새 채팅방 이름"
-            loadChatMessages()
+            Task {
+                let (_,_) = await (loadQnA(), loadChatMessages())
+            }
         }
-    }
-    
-    
-    func getHeaders() -> HTTPHeaders {
-        let token: String
-        if let tokenData = KeychainManager.load(key: "accessToken"),
-           let tokenString = String(data: tokenData, encoding: .utf8) {
-            token = tokenString
-        } else {
-            token = ""
-        }
-        
-        let headers: HTTPHeaders = [
-            "x-auth-token": token
-        ]
-        return headers
     }
     
     private func updateTextEditorHeight() {
@@ -258,166 +247,115 @@ struct PaletteChatView: View {
         let requestModel = SendMessageRequestModel(message: messageText)
         
         isLoadingResponse = true
-        
-        AF.request("https://api.paletteapp.xyz/chat?roomId=\(roomID)",
-                   method: .post,
-                   parameters: requestModel,
-                   encoder: JSONParameterEncoder.default,
-                   headers: getHeaders())
-        .responseDecodable(of: ChatMessageResponseModel.self) { response in
-            DispatchQueue.main.async {
-                switch response.result {
-                case .success(let chatResponse):
-                    print("Message sent successfully: \(chatResponse)")
-                case .failure(let error):
-                    print("Error sending message: \(error.localizedDescription)")
-                    if let data = response.data, let str = String(data: data, encoding: .utf8) {
-                        print("Received data: \(str)")
-                    }
-                }
-                self.isLoadingResponse = false
-            }
-        }
-        
         messageText = ""
         textEditorHeight = 40
         isMessageValid = false
+        
+        Task {
+            let response = await PaletteNetworking.post(
+                "/chat?roomId=\(roomID)",
+                parameters: requestModel,
+                res: EmptyResModel.self
+            )
+            
+            switch (response) {
+            case .success(let response):
+                print("Message sent successfully: \(response)")
+            case .failure(let error):
+                print(error.localizedDescription)
+            }
+            
+            self.isLoadingResponse = false
+        }
     }
     
     private func updateRoomTitle() async {
-        let url = "https://api.paletteapp.xyz/room/\(roomID)/title"
-        let parameters = ChatroomNameFetchModel(title: roomTitle)
+        let data = ChatroomNameFetchModel(title: roomTitle)
         
-        AF.request(url, method: .patch, parameters: parameters, encoder: JSONParameterEncoder.default, headers: getHeaders())
-            .responseData { response in
-                switch response.result {
-                case .success(_):
-                    print("Change Success")
-                    print(parameters)
-                    
-                    if let data = response.data {
-                        PrintJSON(from: data)
-                    }
-                    
-                case .failure(let error):
-                    print("오류:", error.localizedDescription)
-                }
-            }
-    }
-    
-    private func loadChatMessages() {
-        AF.request("https://api.paletteapp.xyz/chat/\(roomID)", method: .get, headers: getHeaders())
-            .responseData { response in
-                switch response.result {
-                case .success(let data):
-                    do {
-                        let chatHistory = try JSONDecoder().decode(ChatHistoryResponse.self, from: data)
-                        DispatchQueue.main.async {
-                            self.messages = chatHistory.data.reversed()
-                            if let lastMessage = self.messages.last, lastMessage.resource == .PROMPT {
-                                self.loadQnAResponse(roomId: self.roomID)
-                            } else {
-                                self.inputType = .text
-                            }
-                        }
-                    } catch {
-                        print("Error decoding chat history: \(error)")
-                        if let decodingError = error as? DecodingError {
-                            switch decodingError {
-                            case .dataCorrupted(let context):
-                                print("Data corrupted: \(context)")
-                            case .keyNotFound(let key, let context):
-                                print("Key '\(key)' not found: \(context.debugDescription)")
-                            case .typeMismatch(let type, let context):
-                                print("Type mismatch for type \(type): \(context.debugDescription)")
-                            case .valueNotFound(let type, let context):
-                                print("Value of type \(type) not found: \(context.debugDescription)")
-                            @unknown default:
-                                print("Unknown decoding error: \(decodingError)")
-                            }
-                        }
-                        if let str = String(data: data, encoding: .utf8) {
-                            print("Received data: \(str)")
-                        }
-                    }
-                case .failure(let error):
-                    print("Error loading chat history: \(error.localizedDescription)")
-                }
-            }
-    }
-    
-    private func handleNewMessages(_ newMessages: [ChatMessageModel]) {
-        for message in newMessages {
-            if message.resource == .PROMPT {
-                loadQnAResponse(roomId: roomID)
-            } else {
-                messages.append(message)
+        Task {
+            let res = await PaletteNetworking.patch("/room/\(roomID)/title", parameters: data, res: EmptyResModel.self)
+            switch(res) {
+            case .success(_):
+                print("Change Success")
+                print(data)
+            case .failure(let error):
+                print(error.localizedDescription)
             }
         }
     }
     
-    private func loadQnAResponse(roomId: Int) {
-            AF.request("https://api.paletteapp.xyz/room/\(roomId)/qna",
-                       method: .get,
-                       headers: getHeaders())
-                .responseDecodable(of: QnAResponseModel.self) { response in
-                    switch response.result {
-                    case .success(let qnaResponse):
-                        DispatchQueue.main.async {
-                            self.inputType = .qna(qnaResponse)  // 전체 QnAResponseModel을 전달
-                        }
-                    case .failure(let error):
-                        print("Error loading QnA: \(error.localizedDescription)")
-                        if let data = response.data, let str = String(data: data, encoding: .utf8) {
-                            print("Received data: \(str)")
-                        }
-                    }
-                }
+    private func loadChatMessages() async {
+        let result = await PaletteNetworking.get("/chat/\(roomID)", res: DataResModel<[ChatMessageModel]>.self)
+        switch result {
+        case .success(let response):
+            await MainActor.run {
+                setMessages(response.data)
+            }
+        case .failure(let error):
+            print("Error loading chat history: \(error.localizedDescription)")
         }
+    }
+    
+    @MainActor
+    private func setMessages(_ msgs: [ChatMessageModel]) {
+        self.messages = msgs.reversed()
+        if let lastMessage = self.messages.last {
+            handleLastMessage(lastMessage)
+        }
+    }
+    
+    private func handleLastMessage(_ msg: ChatMessageModel) {
+        if msg.resource == .PROMPT {
+            if let found = qna.first(where: { elem in elem.id == msg.promptId}) {
+                inputType = .qna(found)
+            }
+        }
+    }
+    
+    private func loadQnA() async {
+        let result = await PaletteNetworking.get("/room/\(roomID)/qna", res: DataResModel<[QnAData]>.self)
+        switch result {
+        case .success(let response):
+            DispatchQueue.main.async {
+                self.qna = response.data
+            }
+        case .failure(let error):
+            print("QNA thrown error: \(error.localizedDescription)")
+        }
+    }
     
     private func submitAnswer(_ answer: AnswerDto) {
         let requestData = ChatRequestData(
-                type: answer.type,
-                choiceId: answer.choiceId,
-                input: answer.input,
-                choice: answer.choice
-            )
-            let requestBody = ChatRequestBody(data: requestData)
-            
-            // 디버깅을 위해 요청 데이터를 출력
-            do {
-                let jsonData = try JSONEncoder().encode(requestBody)
-                if let jsonString = String(data: jsonData, encoding: .utf8) {
-                    print("Request body: \(jsonString)")
-                }
-            } catch {
-                print("Error encoding request body: \(error)")
+            type: answer.type,
+            choiceId: answer.choiceId,
+            input: answer.input,
+            choice: answer.choice
+        )
+        let requestBody = ChatRequestBody(data: requestData)
+        
+        // 디버깅을 위해 요청 데이터를 출력
+        do {
+            let jsonData = try JSONEncoder().encode(requestBody)
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                print("Request body: \(jsonString)")
             }
-            
-            AF.request("https://api.paletteapp.xyz/chat?roomId=\(roomID)",
-                       method: .post,
-                       parameters: requestBody,
-                       encoder: JSONParameterEncoder.default,
-                       headers: getHeaders())
-                .responseData { response in
-                    DispatchQueue.main.async {
-                        switch response.result {
-                        case .success(let data):
-                            if let str = String(data: data, encoding: .utf8) {
-                                print("Response data: \(str)")
-                            }
-                            self.inputType = .text
-                            self.loadChatMessages()
-                        case .failure(let error):
-                            print("Error submitting answer: \(error)")
-                            if let data = response.data, let str = String(data: data, encoding: .utf8) {
-                                print("Error response data: \(str)")
-                            }
-                        }
-                    }
-                }
+        } catch {
+            print("Error encoding request body: \(error)")
+            return
+        }
+        
+        Task {
+            let res = await PaletteNetworking.post("/chat?roomId=\(roomID)", parameters: requestBody, res: EmptyResModel.self)
+            switch res {
+            case .success(let data):
+                print("res! \(data.message)")
+                self.inputType = .text // reset?
+            case .failure(let error):
+                print("Error submitting answer: \(error)")
+            }
         }
     }
+}
 
     extension String {
         func heightWithConstrainedWidth(width: CGFloat, font: UIFont) -> CGFloat {

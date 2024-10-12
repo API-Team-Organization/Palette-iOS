@@ -7,12 +7,8 @@
 
 import SwiftUI
 import FlowKit
-import Alamofire
 
-struct NameInputView: View {
-    
-    let serverurl = "https://api.paletteapp.xyz/auth/register"
-    
+struct NameInputView: View {    
     var email: String
     var pw: String
     var pwCheck: String
@@ -31,41 +27,19 @@ struct NameInputView: View {
                       dismissButton: .default("확인"))
     
     func sendRegisterRequest() async {
-        let url = "https://api.paletteapp.xyz/auth/register"
         let credentials = SignUpRequestModel(username: userName, password: pw, birthDate: birthday, email: email)
         
-        AF.request(url,
-                   method: .post,
-                   parameters: credentials,
-                   encoder: JSONParameterEncoder.default)
-            .responseData { response in
-                switch response.result {
-                case .success(_):
-                    if let headers = response.response?.allHeaderFields,
-                       let token = headers["x-auth-token"] as? String {
-                        print("Received token: \(token)")
-                        
-                        // KeyChain에 토큰 저장
-                        if let tokenData = token.data(using: .utf8) {
-                            let saveStatus = KeychainManager.save(key: "accessToken", data: tokenData)
-                            if saveStatus == noErr {
-                                print("Token successfully saved to KeyChain")
-                                flow.replace([VerifyCodeInputView(email: email, userName: userName)])
-                            } else {
-                                print("Failed to save token to KeyChain. Status: \(saveStatus)")
-                            }
-                        } else {
-                            print("Failed to convert token to Data")
-                        }
-                    } else {
-                        print("No token found in response headers")
-                        print(response)
-                        flow.alert(fail_alert)
-                    }
-                case .failure(let error):
-                    print("Error: \(error)")
-                    flow.alert(fail_alert)
-                }
+        let result = await PaletteNetworking.post("/auth/register", parameters: credentials, res: EmptyResModel.self)
+        switch result {
+        case .success(_):
+            if let tokenData = KeychainManager.load(key: "accessToken"), let _ = String(data: tokenData, encoding: .utf8) {
+                flow.replace([VerifyCodeInputView(email: email, userName: userName)]) // accessToken exists check
+                return
+            }
+            flow.alert(fail_alert)
+        case .failure(let error):
+            print("Error: \(error)")
+            flow.alert(fail_alert)
         }
     }
     

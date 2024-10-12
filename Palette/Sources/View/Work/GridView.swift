@@ -48,7 +48,7 @@ struct GridView: View {
             .padding()
             .padding(.bottom, 75)
         }
-        .onChange(of: images) { _ in
+        .onChange(of: images) {
             if !images.isEmpty {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     onLoadMore()

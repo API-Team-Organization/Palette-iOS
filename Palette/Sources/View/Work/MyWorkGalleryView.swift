@@ -1,7 +1,6 @@
 import SwiftUI
 import Kingfisher
 import FlowKit
-import Alamofire
 
 struct MyWorkGalleryView: View {
     @Flow var flow
@@ -38,7 +37,9 @@ struct MyWorkGalleryView: View {
                         saveImageToGallery(imageUrl: imageUrl)
                     }, onLoadMore: {
                         if !isLoading && hasMorePages {
-                            loadMoreImages()
+                            Task {
+                                await loadMoreImages()
+                            }
                         }
                     })
                 } else if selectedTab == 1 {
@@ -70,43 +71,31 @@ struct MyWorkGalleryView: View {
                   dismissButton: .default(Text("확인")))
         }
         .onAppear {
-            loadMoreImages()
+            Task {
+                await loadMoreImages()
+            }
         }
     }
     
-    func loadMoreImages() {
-            guard !isLoading && hasMorePages else { return }
+    func loadMoreImages() async {
+        guard !isLoading && hasMorePages else { return }
+        await MainActor.run {
             isLoading = true
-            
-            let url = "https://api.paletteapp.xyz/chat/my-image"
-            let parameters: [String: Any] = ["page": page, "size": 10]
-            
-            AF.request(url, method: .get, parameters: parameters, headers: getHeaders())
-                .responseDecodable(of: ImageResponseModel.self) { response in
-                    isLoading = false
-                    switch response.result {
-                    case .success(let imageResponse):
-                        self.images.append(contentsOf: imageResponse.data)
-                        self.page += 1
-                        self.hasMorePages = !imageResponse.data.isEmpty
-                    case .failure(let error):
-                        print("Error loading images: \(error)")
-                    }
-                }
         }
-    
-    func getHeaders() -> HTTPHeaders {
-        let token: String
-        if let tokenData = KeychainManager.load(key: "accessToken"),
-           let tokenString = String(data: tokenData, encoding: .utf8) {
-            token = tokenString
-        } else {
-            token = ""
+        
+        let result = await PaletteNetworking.get("/chat/my-image?page=\(page)&size=10", res: DataResModel<[String]>.self)
+        
+        await MainActor.run {
+            isLoading = false
+            switch result {
+            case .success(let imageResponse):
+                self.images.append(contentsOf: imageResponse.data)
+                self.page += 1
+                self.hasMorePages = !imageResponse.data.isEmpty
+            case .failure(let error):
+                print("Error loading images: \(error)")
+            }
         }
-        let headers: HTTPHeaders = [
-            "x-auth-token": token
-        ]
-        return headers
     }
     
     func saveImageToGallery(imageUrl: String) {
