@@ -18,7 +18,7 @@ struct QnAInputView: View {
     
     var body: some View {
         VStack(spacing: 20) {
-            Text(qna.promptName)
+            Text(instructionText)
                 .font(.headline)
                 .padding()
             
@@ -34,6 +34,17 @@ struct QnAInputView: View {
             submitButton
         }
     }
+    
+    private var instructionText: String {
+            switch qna.type {
+            case .SELECTABLE:
+                return "아래의 값중에 하나를 선택해주세요"
+            case .USER_INPUT:
+                return "답변을 입력해주세요."
+            case .GRID:
+                return "원하는 위치를 선택해주세요"
+            }
+        }
     
     private var selectableView: some View {
             ScrollView {
