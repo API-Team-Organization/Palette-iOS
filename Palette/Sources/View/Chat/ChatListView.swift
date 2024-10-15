@@ -107,19 +107,7 @@ struct ChatListView: View {
                             .font(.custom("SUIT-Bold", size: 18))
                             .foregroundStyle(.black)
                             .padding(.leading, 25)
-                        Spacer()
-                        VStack {
-                            Spacer()
-                            Button(action: {
-                                
-                            }) {
-                                Text("전체보기")
-                                    .font(.custom("SUIT-Medium", size: 14))
-                                    .foregroundStyle(Color("AccentColor"))
-                                    .padding(.trailing, 25)
-                                    
-                            }
-                        }
+                        Spacer() 
                     }
                     VStack(spacing: 10) {
                         ForEach(viewModel.chatRooms, id: \.id) { room in
@@ -144,4 +132,8 @@ struct ChatListView: View {
         }
     }
     
+}
+
+#Preview {
+    ChatListView()
 }
