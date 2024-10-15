@@ -19,11 +19,21 @@ struct ChatMessageModel: Codable, Identifiable, Equatable {
         case id, message, resource, datetime, roomId, userId, isAi, promptId
     }
     
+//    var date: Date {
+//            let formatter = ISO8601DateFormatter()
+//            formatter.formatOptions = [.withInternetDateTime]
+//            return formatter.date(from: datetime) ?? Date()
+//    }
     var date: Date {
         let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withFullDate, .withTime, .withDashSeparatorInDate, .withColonSeparatorInTime]
-        formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
-        return formatter.date(from: datetime) ?? Date()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        
+        if let date = formatter.date(from: datetime) {
+            return date
+        } else {
+            print("Failed to parse date: \(datetime)")
+            return Date()
+        }
     }
     
     static func ==(lhs: ChatMessageModel, rhs: ChatMessageModel) -> Bool {
