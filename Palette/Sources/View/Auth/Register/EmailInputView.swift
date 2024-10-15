@@ -12,9 +12,16 @@ struct EmailInputView: View {
     
     @State var email: String = ""
     @State private var showingBlankAlert = false
+    @State private var showingInvalidEmailAlert = false
     @Environment(\.presentationMode) var presentationMode
     @Flow var flow
     
+    var emailPattern = /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$/
+    
+    private func isValidEmail(_ email: String) -> Bool {
+        return email.wholeMatch(of: emailPattern) != nil
+    }
+
     var body: some View {
         ZStack {
             Color(.white).ignoresSafeArea()
@@ -29,7 +36,9 @@ struct EmailInputView: View {
                 .padding(.bottom, 2)
                 .padding(.top, 50)
                 HStack {
-                    Text("본인인증을 위해 필요해요!")
+                    Text(verbatim: "이메일은 example@domain.com 의 형식이어야 해요.")
+                        .autocapitalization(.none)
+                        .environment(\.textCase, nil)
                         .font(.custom("SUIT-Bold", size: 15))
                         .padding(.leading, 17)
                         .foregroundStyle(Color("DescText"))
@@ -54,8 +63,10 @@ struct EmailInputView: View {
                 Spacer()
                 Spacer()
                 Button(action: {
-                    if email == "" {
+                    if email.isEmpty {
                         self.showingBlankAlert = true
+                    } else if !isValidEmail(email) {
+                        self.showingInvalidEmailAlert = true
                     } else {
                         flow.push(PWInputView(email: email))
                     }
@@ -70,15 +81,22 @@ struct EmailInputView: View {
                         .padding(.bottom, 30)
                 }
             }
-            .alert(isPresented: $showingBlankAlert) {
-                Alert(title: Text("앗! 인증코드가 비어있어요!!"), message: Text("인증코드를 입력해주세요."), dismissButton: .default(Text("확인")))
-                }
+            .alert("이메일이 비어있어요!", isPresented: $showingBlankAlert) {
+                Button("확인", role: .cancel) { }
+            } message: {
+                Text("이메일을 입력해주세요.")
+            }
+            .alert("유효하지 않은 이메일 형식", isPresented: $showingInvalidEmailAlert) {
+                Button("확인", role: .cancel) { }
+            } message: {
+                Text("이메일은 example@domain.com 형식으로 이루어져야 합니다. 영문, 숫자, 일부 특수문자(.-_)만 사용 가능합니다.")
             }
             .onTapGesture {
                 self.endTextEditing()
+            }
+            .navigationBarBackButtonHidden(true)
+            .navigationBarItems(leading: BackButton())
         }
-        .navigationBarBackButtonHidden(true)
-        .navigationBarItems(leading: BackButton())
     }
 }
 
