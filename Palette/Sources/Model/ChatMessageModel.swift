@@ -15,15 +15,11 @@ struct ChatMessageModel: Codable, Identifiable, Equatable {
         case IMAGE
         case PROMPT
     }
+    
     enum CodingKeys: String, CodingKey {
         case id, message, resource, datetime, roomId, userId, isAi, promptId
     }
-    
-//    var date: Date {
-//            let formatter = ISO8601DateFormatter()
-//            formatter.formatOptions = [.withInternetDateTime]
-//            return formatter.date(from: datetime) ?? Date()
-//    }
+
     var date: Date {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]

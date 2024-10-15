@@ -24,7 +24,7 @@ class RiveTabbarVM: RiveViewModel {
     // Subscribe to Rive events and this delegate will be invoked
     @objc func onRiveEventReceived(onRiveEvent riveEvent: RiveEvent) {
         
-        HapticFeedback.impactOccurred()
+        setHapticIntensity(.heavy)
         
         debugPrint("Event Name: \(riveEvent.name())")
         if riveEvent.name() == "click_search" {
@@ -41,6 +41,6 @@ class RiveTabbarVM: RiveViewModel {
     
     func setHapticIntensity(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
         HapticFeedback.impactOccurred(intensity: style == .light ? 0.3 : style == .medium ? 0.6 : 1.0)
-        }
+    }
     
 }

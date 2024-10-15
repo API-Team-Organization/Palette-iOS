@@ -7,6 +7,8 @@ struct CoordinateGridBox: View {
     @GestureState private var dragState = DragState.inactive
     @State private var isDragging = false
     @State private var lastDraggedNumber: Int?
+    private let HapticFeedback = UIImpactFeedbackGenerator(style: .medium)
+
     
     var body: some View {
         VStack(spacing: 6) {
@@ -24,6 +26,10 @@ struct CoordinateGridBox: View {
         .cornerRadius(16)
         .frame(width: 230, height: 230)
         .gesture(dragGesture)
+    }
+    
+    func setHapticIntensity(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
+        HapticFeedback.impactOccurred(intensity: style == .light ? 0.3 : style == .medium ? 0.6 : 1.0)
     }
     
     private func cellView(for number: Int) -> some View {
@@ -66,8 +72,10 @@ struct CoordinateGridBox: View {
     
     private func toggleSelection(_ number: Int) {
         if selectedNumbers.contains(number) {
+            setHapticIntensity(.light)
             selectedNumbers.remove(number)
         } else {
+            setHapticIntensity(.heavy)
             selectedNumbers.insert(number)
         }
     }
