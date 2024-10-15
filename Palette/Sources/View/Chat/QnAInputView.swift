@@ -17,33 +17,14 @@ struct QnAInputView: View {
             switch qna.type {
             case .USER_INPUT:
                 userInputView
-            case .SELECTABLE, .GRID:
-                VStack(spacing: 20) {
-                    HStack {
-                        Text(instructionText)
-                            .font(.custom("SUIT-Bold", size: 17))
-                            .foregroundStyle(Color.black)
-                        Spacer()
-                    }
-                    .padding(.leading, 20)
-                    .padding(.top, 16)
-                    
-                    if qna.type == .SELECTABLE {
-                        selectableView
-                    } else {
-                        gridView
-                    }
-                    
-                    submitButton
-                }
-                .padding(.bottom, 20)
-                .background(Color.white)
-                .cornerRadius(20)
-                .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 3)
-                .frame(width: 330)
+            case .SELECTABLE:
+                selectableView
+            case .GRID:
+                gridView
             }
         }
     }
+    
     private var instructionText: String {
         switch qna.type {
         case .SELECTABLE:
@@ -56,7 +37,16 @@ struct QnAInputView: View {
     }
     
     private var selectableView: some View {
-        VStack {
+        VStack(spacing: 20) {
+            HStack {
+                Text(instructionText)
+                    .font(.custom("SUIT-Bold", size: 18))
+                    .foregroundStyle(Color.black)
+                Spacer()
+            }
+            .padding(.leading, 27)
+            .padding(.top, 20)
+            
             Picker("선택", selection: $selectedChoice) {
                 ForEach(qna.question.choices ?? []) { choice in
                     Text(choice.displayName).tag(choice.id as String?)
@@ -66,70 +56,87 @@ struct QnAInputView: View {
             .colorScheme(.light)
             .frame(height: 150)
             .clipped()
+            
+            submitButton
         }
-        .padding()
-        .background(.white)
-        .cornerRadius(12)
+        .padding(.bottom, 20)
+        .background(Color.white)
+        .cornerRadius(20)
+        .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 3)
+        .frame(width: 340)
+    }
+    
+    private var gridView: some View {
+        VStack {
+            Text(instructionText)
+                .font(.custom("SUIT-Bold", size: 18))
+                .foregroundStyle(Color.black)
+                .padding(.bottom, 20)
+            
+            if let xSize = qna.question.xSize, let ySize = qna.question.ySize {
+                CoordinateGridBox(width: xSize, height: ySize, selectedNumbers: $selectedNumbers)
+                    .frame(maxWidth: 300, maxHeight: 300)
+            } else {
+                Text("Grid size not specified").foregroundColor(.red)
+            }
+            
+            submitButton
+        }
+        .padding(.vertical, 20)
+        .frame(width: 340)
+        .background(Color.white)
+        .cornerRadius(20)
+        .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 3)
     }
     
     private var userInputView: some View {
-            VStack(spacing: 0) {
-                HStack(alignment: .bottom, spacing: 10) {
-                    ZStack(alignment: .leading) {
-                        TextEditor(text: $userInput)
-                            .font(.custom("SUIT-Medium", size: 15))
-                            .foregroundStyle(Color.black)
-                            .padding(.horizontal, 15)
-                            .padding(.vertical, 10)
-                            .frame(height: max(40, textEditorHeight))
-                            .scrollContentBackground(.hidden)
-                            .background(Color.clear)
-                            .onChange(of: userInput) {
-                                withAnimation {
-                                    updateTextEditorHeight()
-                                }
+        VStack(spacing: 0) {
+            HStack(alignment: .bottom, spacing: 10) {
+                ZStack(alignment: .leading) {
+                    TextEditor(text: $userInput)
+                        .font(.custom("SUIT-Medium", size: 15))
+                        .foregroundStyle(Color.black)
+                        .padding(.horizontal, 15)
+                        .padding(.vertical, 10)
+                        .frame(height: max(40, textEditorHeight))
+                        .scrollContentBackground(.hidden)
+                        .background(Color.clear)
+                        .onChange(of: userInput) {
+                            withAnimation {
+                                updateTextEditorHeight()
                             }
-                            .focused($isInputFocused)
-                        
-                        if userInput.isEmpty {
-                            Text("당신의 Palette를 그려보세요")
-                                .foregroundColor(.gray)
-                                .padding(.horizontal, 20)
-                                .padding(.vertical, 12)
-                                .font(.custom("SUIT-Medium", size: 15))
                         }
-                    }
-                    .background(Color("ChatTextFieldBack"))
-                    .cornerRadius(20)
+                        .focused($isInputFocused)
                     
-                    Button(action: {
-                        if isMessageValid {
-                            submitAnswer()
-                        }
-                    }) {
-                        Image(systemName: "paperplane.fill")
-                            .foregroundColor(isMessageValid ? Color("AccentColor") : Color.gray)
-                            .padding(10)
-                            .background(Color("ChatTextFieldBack"))
-                            .clipShape(Circle())
+                    if userInput.isEmpty {
+                        Text("당신의 Palette를 그려보세요")
+                            .foregroundColor(.gray)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 12)
+                            .font(.custom("SUIT-Medium", size: 15))
                     }
-                    .disabled(!isMessageValid)
                 }
-                .padding(.horizontal)
-                .padding(.top, 10)
-                .padding(.bottom, 20)
-                .background(Color.white)
-                .cornerRadius(20, corners: [.topLeft, .topRight])
+                .background(Color("ChatTextFieldBack"))
+                .cornerRadius(20)
+                
+                Button(action: {
+                    if isMessageValid {
+                        submitAnswer()
+                    }
+                }) {
+                    Image(systemName: "paperplane.fill")
+                        .foregroundColor(isMessageValid ? Color("AccentColor") : Color.gray)
+                        .padding(10)
+                        .background(Color("ChatTextFieldBack"))
+                        .clipShape(Circle())
+                }
+                .disabled(!isMessageValid)
             }
-        }
-    
-    private var gridView: some View {
-        if let xSize = qna.question.xSize, let ySize = qna.question.ySize {
-            return AnyView(
-                CoordinateGridBox(width: xSize, height: ySize, selectedNumbers: $selectedNumbers)
-            )
-        } else {
-            return AnyView(Text("Grid size not specified").foregroundColor(.red))
+            .padding(.horizontal)
+            .padding(.top, 10)
+            .padding(.bottom, 20)
+            .background(Color.white)
+            .cornerRadius(20, corners: [.topLeft, .topRight])
         }
     }
     
