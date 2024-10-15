@@ -10,6 +10,7 @@ struct LoginView: View {
     @State private var showingEmailAlert = false
     @State private var showingPasswordAlert = false
     @State private var keyboardHeight: CGFloat = 0
+    @State private var isPasswordVisible: Bool = false
     @Environment(\.presentationMode) var presentationMode
     
     @FocusState private var isEmailFocused: Bool
@@ -80,7 +81,7 @@ struct LoginView: View {
         .alert("비밀번호 형식 오류", isPresented: $showingPasswordAlert) {
             Button("확인", role: .cancel) { }
         } message: {
-            Text("비밀번호는 영문, 숫자, 특수문자로 이루어져야 하며, 8 ~ 32 글자 사이여야 해요.")
+            Text("비밀번호는 영문, 숫자, 특수문자(!@#$%^&*,.<>~)로 이루어져야 하며, 8 ~ 32자 사이여야 해요.")
         }
     }
     
@@ -137,20 +138,35 @@ struct LoginView: View {
                     .font(.custom("SUIT-Medium", size: 14))
                     .foregroundColor(.gray)
                     .padding(.leading, 4)
-                SecureField("", text: $password)
+                HStack {
+                    Group {
+                        if isPasswordVisible {
+                            TextField("", text: $password)
+                        } else {
+                            SecureField("", text: $password)
+                        }
+                    }
                     .autocapitalization(.none)
                     .font(.custom("SUIT-Medium", size: 18))
                     .padding(.vertical, 8)
                     .foregroundStyle(.black)
-                    .background(
-                        VStack {
-                            Spacer()
-                            Color(isPasswordFocused ? "AccentColor" : "SuBlack" ).frame(height: 1)
-                        }
-                    )
-                    .padding(.leading, -2)
-                    .padding(.horizontal, 7)
-                    .focused($isPasswordFocused)
+                    
+                    Button(action: {
+                        isPasswordVisible.toggle()
+                    }) {
+                        Image(systemName: isPasswordVisible ? "eye.slash.fill" : "eye.fill")
+                            .foregroundColor(.gray)
+                    }
+                }
+                .background(
+                    VStack {
+                        Spacer()
+                        Color(isPasswordFocused ? "AccentColor" : "SuBlack" ).frame(height: 1)
+                    }
+                )
+                .padding(.leading, -2)
+                .padding(.horizontal, 7)
+                .focused($isPasswordFocused)
             }
         }
     }
@@ -214,12 +230,10 @@ struct LoginView: View {
         }
     }
     
-    // 이메일 유효성 검사 함수
     private func isValidEmail(_ email: String) -> Bool {
         return email.wholeMatch(of: emailPattern) != nil
     }
         
-    // 비밀번호 유효성 검사 함수
     private func isValidPassword(_ password: String) -> Bool {
         return password.wholeMatch(of: passwordPattern) != nil
     }
@@ -230,7 +244,6 @@ struct LoginView: View {
         showingfailAlert = true
     }
 }
-
 
 extension View {
     func endTextEditing() {
