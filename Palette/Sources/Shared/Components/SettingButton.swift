@@ -31,7 +31,7 @@ struct SettingButton: View {
             case .evolved:
                 flow.push(Text("evolved"))
             case .appinfo:
-                flow.push(Text("appinfo"))
+                flow.push(AppInfoView(), animated: true)
             }
         }) {
             HStack {
