@@ -16,11 +16,12 @@ struct BackButton: View {
         }) {
             HStack {
                 Image(systemName: "chevron.left")
+                    .font(.system(size: 18))
                     .bold()
                     .foregroundStyle(Color("LightDark"))
-                    .padding(.leading, -4)
+                    .padding(.leading, 0)
                 Text("돌아가기")
-                    .font(.custom("SUIT-SemiBold", size: 16))
+                    .font(.custom("SUIT-SemiBold", size: 17))
                     .foregroundStyle(Color("LightDark"))
             }
         }

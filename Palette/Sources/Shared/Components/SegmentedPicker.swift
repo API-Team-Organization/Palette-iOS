@@ -16,7 +16,7 @@ struct SegmentedPicker: View {
                         .cornerRadius(12)
                         .padding(3)
                     Text(options[index])
-                        .font(.custom("SUIT-Bold", size: 15))
+                        .font(.custom("SUIT-Bold", size: 16))
                         .foregroundColor(preselectedIndex == index ? selectedTextColor : descTextColor)
                         .zIndex(1)
                 }
