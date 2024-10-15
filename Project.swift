@@ -7,7 +7,7 @@ let project = Project(
             name: "Palette",
             destinations: .iOS,
             product: .app,
-            bundleId: "xyz.paleteapp.ios",
+            bundleId: "xyz.paleteapp.iosapp",
             infoPlist: .extendingDefault(
                 with: [
                     "CFBundleDisplayName": "Palette",

@@ -33,8 +33,10 @@ public enum PaletteAsset {
     public static let notification = PaletteImages(name: "Notification")
     public static let paletteLogo = PaletteImages(name: "PaletteLogo")
     public static let plus = PaletteImages(name: "Plus")
+    public static let qnABack = PaletteColors(name: "QnABack")
     public static let selectedTabColor = PaletteColors(name: "SelectedTabColor")
     public static let stat = PaletteImages(name: "Stat")
+    public static let suBlack = PaletteColors(name: "SuBlack")
     public static let textFieldBack = PaletteColors(name: "TextFieldBack")
     public static let textFieldDesc = PaletteColors(name: "TextFieldDesc")
   }
