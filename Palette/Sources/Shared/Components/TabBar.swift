@@ -10,6 +10,7 @@ enum Tab {
 class RiveTabbarVM: RiveViewModel {
 
     @Published var selectedTab: Tab
+    private let HapticFeedback = UIImpactFeedbackGenerator(style: .medium)
 
     init(selectedTab: Tab) {
         self.selectedTab = selectedTab
@@ -22,6 +23,9 @@ class RiveTabbarVM: RiveViewModel {
     
     // Subscribe to Rive events and this delegate will be invoked
     @objc func onRiveEventReceived(onRiveEvent riveEvent: RiveEvent) {
+        
+        HapticFeedback.impactOccurred()
+        
         debugPrint("Event Name: \(riveEvent.name())")
         if riveEvent.name() == "click_search" {
             selectedTab = .search
@@ -34,4 +38,9 @@ class RiveTabbarVM: RiveViewModel {
             debugPrint("setting Clicked")
         }
     }
+    
+    func setHapticIntensity(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
+        HapticFeedback.impactOccurred(intensity: style == .light ? 0.3 : style == .medium ? 0.6 : 1.0)
+        }
+    
 }
