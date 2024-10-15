@@ -7,11 +7,16 @@ struct LoginView: View {
     @State private var isLoginWorking = false
     @State private var showingfailAlert = false
     @State private var showinginputAlert = false
+    @State private var showingEmailAlert = false
+    @State private var showingPasswordAlert = false
     @State private var keyboardHeight: CGFloat = 0
     @Environment(\.presentationMode) var presentationMode
     
     @FocusState private var isEmailFocused: Bool
     @FocusState private var isPasswordFocused: Bool
+    
+    var emailPattern = /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$/
+    var passwordPattern = /[a-zA-Z0-9!@#\$%\^\&\*,.<>~]{8,32}/
     
     @Flow var flow
     
@@ -66,6 +71,16 @@ struct LoginView: View {
             Button("확인", role: .cancel) { }
         } message: {
             Text("비밀번호나 아이디를 확인해주세요.")
+        }
+        .alert("이메일 형식 오류", isPresented: $showingEmailAlert) {
+            Button("확인", role: .cancel) { }
+        } message: {
+            Text("이메일은 example@domain.com 형식으로 이루어져야 해요.")
+        }
+        .alert("비밀번호 형식 오류", isPresented: $showingPasswordAlert) {
+            Button("확인", role: .cancel) { }
+        } message: {
+            Text("비밀번호는 영문, 숫자, 특수문자로 이루어져야 하며, 8 ~ 32 글자 사이여야 해요.")
         }
     }
     
@@ -142,6 +157,10 @@ struct LoginView: View {
         Button(action: {
             if email.isEmpty || password.isEmpty {
                 showinginputAlert = true
+            } else if !isValidEmail(email) {
+                showingEmailAlert = true
+            } else if !isValidPassword(password) {
+                showingPasswordAlert = true
             } else {
                 isLoginWorking = true
                 Task { await handleLogin() }
@@ -191,6 +210,16 @@ struct LoginView: View {
         await MainActor.run {
             failHandler()
         }
+    }
+    
+    // 이메일 유효성 검사 함수
+    private func isValidEmail(_ email: String) -> Bool {
+        return email.wholeMatch(of: emailPattern) != nil
+    }
+        
+    // 비밀번호 유효성 검사 함수
+    private func isValidPassword(_ password: String) -> Bool {
+        return password.wholeMatch(of: passwordPattern) != nil
     }
     
     @MainActor
