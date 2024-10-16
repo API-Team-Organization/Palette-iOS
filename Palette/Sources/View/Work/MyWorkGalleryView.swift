@@ -83,15 +83,15 @@ struct MyWorkGalleryView: View {
             isLoading = true
         }
         
-        let result = await PaletteNetworking.get("/chat/my-image?page=\(page)&size=10", res: DataResModel<[String]>.self)
+        let result = await PaletteNetworking.get("/chat/my-image?page=\(page)&size=10", res: DataResModel<ImageListModel>.self)
         
         await MainActor.run {
             isLoading = false
             switch result {
             case .success(let imageResponse):
-                self.images.append(contentsOf: imageResponse.data)
+                self.images.append(contentsOf: imageResponse.data.images)
                 self.page += 1
-                self.hasMorePages = !imageResponse.data.isEmpty
+                self.hasMorePages = !imageResponse.data.images.isEmpty
             case .failure(let error):
                 print("Error loading images: \(error)")
             }
