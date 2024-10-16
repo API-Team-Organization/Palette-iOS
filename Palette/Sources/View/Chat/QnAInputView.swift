@@ -73,8 +73,8 @@ struct QnAInputView: View {
                 .foregroundStyle(Color.black)
                 .padding(.bottom, 20)
             
-            if let xSize = qna.question.xSize, let ySize = qna.question.ySize {
-                CoordinateGridBox(width: xSize, height: ySize, selectedNumbers: $selectedNumbers)
+            if let xSize = qna.question.xSize, let ySize = qna.question.ySize, let maxCount = qna.question.maxCount {
+                CoordinateGridBox(width: xSize, height: ySize, maxCount: maxCount, selectedNumbers: $selectedNumbers)
                     .frame(maxWidth: 300, maxHeight: 300)
             } else {
                 Text("Grid size not specified").foregroundColor(.red)

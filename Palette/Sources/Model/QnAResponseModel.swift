@@ -30,6 +30,7 @@ struct QuestionDto: Codable {
     let choices: [Choice]?
     let xSize: Int?
     let ySize: Int?
+    let maxCount: Int?
 }
 
 struct Choice: Codable, Identifiable {

@@ -3,13 +3,13 @@ import SwiftUI
 struct CoordinateGridBox: View {
     let width: Int
     let height: Int
+    let maxCount: Int
     @Binding var selectedNumbers: Set<Int>
     @GestureState private var dragState = DragState.inactive
     @State private var isDragging = false
     @State private var lastDraggedNumber: Int?
     private let HapticFeedback = UIImpactFeedbackGenerator(style: .medium)
 
-    
     var body: some View {
         VStack(spacing: 6) {
             ForEach(0..<height, id: \.self) { row in
@@ -26,6 +26,9 @@ struct CoordinateGridBox: View {
         .cornerRadius(16)
         .frame(width: 230, height: 230)
         .gesture(dragGesture)
+        .onAppear(){
+            print(maxCount)
+        }
     }
     
     func setHapticIntensity(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
@@ -74,9 +77,12 @@ struct CoordinateGridBox: View {
         if selectedNumbers.contains(number) {
             setHapticIntensity(.light)
             selectedNumbers.remove(number)
-        } else {
+        } else if selectedNumbers.count < maxCount {
             setHapticIntensity(.heavy)
             selectedNumbers.insert(number)
+        } else {
+            // Optionally, you can add a feedback here to indicate that the maximum selection has been reached
+            setHapticIntensity(.medium)
         }
     }
     
@@ -113,8 +119,9 @@ struct CoordinateGridBox_Previews: PreviewProvider {
         var body: some View {
             VStack {
                 Spacer()
-                CoordinateGridBox(width: 4, height: 5, selectedNumbers: $selectedNumbers)
+                CoordinateGridBox(width: 1, height: 3, maxCount: 1, selectedNumbers: $selectedNumbers)
                 Text("Selected: \(selectedNumbers.sorted().map { String($0) }.joined(separator: ", "))")
+                Text("Count: \(selectedNumbers.count)/3")
             }
         }
     }

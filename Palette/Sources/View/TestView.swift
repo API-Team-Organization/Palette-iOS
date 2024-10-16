@@ -6,7 +6,7 @@ struct TestView: View {
         var body: some View {
             VStack {
                 Spacer()
-                CoordinateGridBox(width: 3, height: 3, selectedNumbers: $selectedNumbers)
+                CoordinateGridBox(width: 3, height: 3, maxCount: 1, selectedNumbers: $selectedNumbers)
         }
     }
 }
