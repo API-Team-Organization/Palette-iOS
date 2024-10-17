@@ -96,3 +96,6 @@ fastlane/test_output
 
 iOSInjectionProject/
 .DS_Store
+
+
+Palette/Resources/.env
