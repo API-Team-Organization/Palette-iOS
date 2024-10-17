@@ -44,6 +44,7 @@ let project = Project(
                 .external(name: "RiveRuntime"),
                 .external(name: "Kingfisher"),
                 .external(name: "FlowKit"),
+                .external(name: "SwiftDotenv"),
                 .external(name: "SkeletonUI"),
             ]
         ),
