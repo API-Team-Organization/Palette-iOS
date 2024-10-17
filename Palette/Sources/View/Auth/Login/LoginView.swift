@@ -181,7 +181,16 @@ struct LoginView: View {
                 showingPasswordAlert = true
             } else {
                 isLoginWorking = true
-                Task { await handleLogin() }
+                Task {
+                    let success = await handleLogin()
+                    DispatchQueue.main.async {
+                        if success {
+                            flow.replace([MainView()]) // accessToken exists check
+                        } else {
+                            failHandler()
+                        }
+                    }
+                }
             }
         }) {
             Text("로그인")
@@ -215,19 +224,24 @@ struct LoginView: View {
         .padding(.top, 16)
     }
     
-    func handleLogin() async {
-        let post = await PaletteNetworking.post("/auth/login", parameters: LoginRequestModel(email: email, password: password), res: EmptyResModel.self)
+    func handleLogin() async -> Bool {
+        let res = await PaletteNetworking.post("/auth/login", parameters: LoginRequestModel(email: email, password: password), res: EmptyResModel.self)
         
-        if let tokenData = KeychainManager.load(key: "accessToken"), let _ = String(data: tokenData, encoding: .utf8) {
-            await MainActor.run {
-                flow.replace([MainView()]) // accessToken exists check
-            }
-            return
+        
+        switch res {
+        case .failure(let error):
+            print(error)
+            return false
+        default:
+            break
         }
-    
-        await MainActor.run {
-            failHandler()
+        
+        if let tokenData = KeychainManager.load(key: "accessToken"), let dat = String(data: tokenData, encoding: .utf8) {
+            print(dat)
+            return true
         }
+        
+        return false
     }
     
     private func isValidEmail(_ email: String) -> Bool {
