@@ -7,7 +7,14 @@ palette's iOS App Repo.
 tuist install
 tuist generate
 ```
-When Complete, It's Palette Time!
+When Complete, plz move ```/Palette/Resoures```,
+And, make .env File with
+
+```
+API_URL="{API_URL}"
+```
+
+And, It's Palette Time!
 
 or, You Can Edit This Project Setting With
 
