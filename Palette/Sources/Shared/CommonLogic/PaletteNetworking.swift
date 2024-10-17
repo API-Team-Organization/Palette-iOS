@@ -7,13 +7,26 @@
 
 import Foundation
 import Alamofire
+import SwiftDotenv
 
 struct PaletteNetworking {
     @available(*, unavailable) private init() {}
     
-    private static let baseUrl: String = {
-        return "https://api.paletteapp.xyz"
-        // TODO: get url from config
+//    private static let baseUrl: String = {
+//        return "https://api.paletteapp.xyz"
+//        // TODO: get url from config
+//    }()
+
+    private static var baseUrl: String? = {
+        do {
+            guard let envPath = Bundle.main.path(forResource: "", ofType: "env") else { return nil }
+            try Dotenv.configure(atPath: envPath)
+            let url = Dotenv["API_URL"]
+            return url?.stringValue
+        } catch {
+            print(error)
+            return nil // TODO Exit -> 개발자 휴먼에러. 앱이 켜지면 안됨.
+        }
     }()
     
     private static let session: Session = Session(
@@ -88,6 +101,8 @@ struct PaletteNetworking {
                 default:
                     break
                 }
+                print("error")
+                print(error)
                 return .failure(.unknown)
             default:
                 print(error)
@@ -104,7 +119,7 @@ struct PaletteNetworking {
         res: T.Type
     ) async -> Result<T, PaletteNetworkingError> where T : Decodable {
         let response = await session
-            .request("\(baseUrl)\(path)", method: .get, headers: headers)
+            .request("\(baseUrl!)\(path)", method: .get, headers: headers)
             .validate()
             .serializingDecodable(res)
             .response
@@ -121,7 +136,7 @@ struct PaletteNetworking {
         headers: HTTPHeaders? = nil
     ) -> HTTPURLResponse? {
         return session
-            .request("\(baseUrl)\(path)", method: method, parameters: parameters, encoder: encoder, headers: headers)
+            .request("\(baseUrl!)\(path)", method: method, parameters: parameters, encoder: encoder, headers: headers)
             .validate()
             .response
     }
@@ -133,7 +148,7 @@ struct PaletteNetworking {
         res: T.Type
     ) async -> Result<T, PaletteNetworkingError> where T : Decodable {
         let response = await session
-            .request("\(baseUrl)\(path)", method: .post, headers: headers)
+            .request("\(baseUrl!)\(path)", method: .post, headers: headers)
             .validate()
             .serializingDecodable(res)
             .response
@@ -149,7 +164,7 @@ struct PaletteNetworking {
         res: T.Type
     ) async -> Result<T, PaletteNetworkingError> where T : Decodable, Parameters: Encodable {
         let response = await session
-            .request("\(baseUrl)\(path)", method: .post, parameters: parameters, encoder: encoder, headers: headers)
+            .request("\(baseUrl!)\(path)", method: .post, parameters: parameters, encoder: encoder, headers: headers)
             .validate()
             .serializingDecodable(res)
             .response
@@ -166,7 +181,7 @@ struct PaletteNetworking {
         res: T.Type
     ) async -> Result<T, PaletteNetworkingError> where T : Decodable {
         let response = await session
-            .request("\(baseUrl)\(path)", method: .patch, parameters: parameters, encoder: encoder, headers: headers)
+            .request("\(baseUrl!)\(path)", method: .patch, parameters: parameters, encoder: encoder, headers: headers)
             .validate()
             .serializingDecodable(res)
             .response
@@ -181,7 +196,7 @@ struct PaletteNetworking {
         res: T.Type
     ) async -> Result<T, PaletteNetworkingError> where T : Decodable {
         let response = await session
-            .request("\(baseUrl)\(path)", method: .delete, headers: headers)
+            .request("\(baseUrl!)\(path)", method: .delete, headers: headers)
             .validate()
             .serializingDecodable(res)
             .response
