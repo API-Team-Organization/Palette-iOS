@@ -12,11 +12,6 @@ import SwiftDotenv
 struct PaletteNetworking {
     @available(*, unavailable) private init() {}
     
-//    private static let baseUrl: String = {
-//        return "https://api.paletteapp.xyz"
-//        // TODO: get url from config
-//    }()
-
     private static var baseUrl: String? = {
         do {
             guard let envPath = Bundle.main.path(forResource: "", ofType: "env") else { return nil }
