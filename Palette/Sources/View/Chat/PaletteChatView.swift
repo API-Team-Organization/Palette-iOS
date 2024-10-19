@@ -69,6 +69,9 @@ struct PaletteChatView: View {
             isInputFocused = false
         }
         .onAppear(perform: handleOnAppear)
+        .onDisappear {
+            websocket.close()  // 뷰가 사라질 때 WebSocket 연결 종료
+        }
         .alert("채팅방 이름 입력", isPresented: $showingRoomTitleAlert, actions: {
             TextField("채팅방 이름", text: $roomTitle)
             Button("확인") {

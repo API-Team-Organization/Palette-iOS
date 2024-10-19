@@ -13,6 +13,8 @@ class Websocket: ObservableObject {
     private var webSocketTask: URLSessionWebSocketTask?
     private let roomID: Int
     private var onMessage: ((ChatMessageModel) -> ())?
+    private var pingTimer: Timer?
+    private var isClosed = false  // 새로운 플래그 추가
     
     func setMessageCallback(onMessage: @escaping (ChatMessageModel) -> ()) {
         self.onMessage = onMessage
@@ -21,6 +23,10 @@ class Websocket: ObservableObject {
     init(roomID: Int) {
         self.roomID = roomID
         self.connect()
+    }
+    
+    deinit {
+        close()
     }
     
     private func connect() {
@@ -41,6 +47,7 @@ class Websocket: ObservableObject {
         webSocketTask?.resume()
         print("WebSocket connected successfully.")
         receiveMessage()
+        startPingTimer()
     }
     
     private func getHeaders() -> [String: String] {
@@ -57,10 +64,14 @@ class Websocket: ObservableObject {
     
     private func receiveMessage() {
         webSocketTask?.receive { [weak self] result in
+            guard let self = self, !self.isClosed else { return }  // isClosed 체크 추가
+            
             switch result {
             case .failure(let error):
                 print("WebSocket Receive Error: \(error.localizedDescription)")
-                self?.reconnect()
+                if !self.isClosed {  // isClosed 체크 추가
+                    self.reconnect()
+                }
             case .success(let message):
                 switch message {
                 case .string(let text):
@@ -73,7 +84,7 @@ class Websocket: ObservableObject {
                                 
                                 DispatchQueue.main.async {
                                     print("im callin")
-                                    self?.onMessage?(response)
+                                    self.onMessage?(response)
                                 }
                             case .ERROR:
                                 let response = try JSONDecoder().decode(WebSocketFailResponseData.self, from: data)
@@ -88,15 +99,54 @@ class Websocket: ObservableObject {
                 @unknown default:
                     break
                 }
-                self?.receiveMessage()
+                self.receiveMessage()
             }
         }
     }
     
+    func close() {
+        print("Closing WebSocket connection...")
+        isClosed = true  // 연결 종료 플래그 설정
+        stopPingTimer()
+        webSocketTask?.cancel(with: .goingAway, reason: nil)
+        webSocketTask = nil
+    }
+    
     private func reconnect() {
+        guard !isClosed else { return }  // isClosed 체크 추가
+        
+        close()
+        isClosed = false  // reconnect 시 isClosed 재설정
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
+            guard let self = self, !self.isClosed else { return }  // 추가 체크
             print("Attempting to reconnect WebSocket...")
-            self?.connect()
+            self.connect()
+        }
+    }
+    
+    private func startPingTimer() {
+        pingTimer = Timer.scheduledTimer(withTimeInterval: 20.0, repeats: true) { [weak self] _ in
+            self?.sendPing()
+        }
+    }
+    
+    private func stopPingTimer() {
+        pingTimer?.invalidate()
+        pingTimer = nil
+    }
+    
+    private func sendPing() {
+        guard !isClosed else { return }  // isClosed 체크 추가
+        
+        webSocketTask?.sendPing { [weak self] error in
+            guard let self = self, !self.isClosed else { return }  // 추가 체크
+            
+            if let error = error {
+                print("Error sending ping: \(error.localizedDescription)")
+                self.reconnect()
+            } else {
+                print("Ping sent successfully")
+            }
         }
     }
 }
