@@ -17,7 +17,7 @@ struct PaletteChatView: View {
     @State private var inputType: InputType = .text
     @State private var currentQnA: QnAData?
     @State private var queuePosition: Int?
-    @State private var forceUpdate: Bool = false
+    @State private var forceUpdate: Bool = false  // 새로 추가된 상태 변수
     @Environment(\.presentationMode) var presentationMode
     let update_alert = Alert(title: Text("방 제목 설정 실패"),
                              message: Text("채팅방 제목 설정에 실패했습니다."),
@@ -52,12 +52,7 @@ struct PaletteChatView: View {
         self.messages.append(message)
         print("new Chat! \(message)")
         handleLastMessage(message)
-        
-        // 약간의 지연 후 forceUpdate 토글
-        Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1초 대기
-            self.forceUpdate.toggle()
-        }
+        self.forceUpdate.toggle() // 강제 업데이트 트리거
     }
     
     var body: some View {
@@ -80,15 +75,6 @@ struct PaletteChatView: View {
         .onChange(of: websocket.queuePosition) { newValue in
             print("Queue position changed in PaletteChatView: \(String(describing: newValue))")
             self.queuePosition = newValue
-            // queuePosition이 변경될 때 inputType 재설정
-            if let position = newValue {
-                if position < 0 {
-                    handleLastMessage(messages.last ?? ChatMessageModel(id: "", message: "", resource: .CHAT, datetime: "", roomId: 0, userId: 0, promptId: nil, isAi: false))
-                }
-            } else {
-                // newValue가 nil인 경우
-                handleLastMessage(messages.last ?? ChatMessageModel(id: "", message: "", resource: .CHAT, datetime: "", roomId: 0, userId: 0, promptId: nil, isAi: false))
-            }
         }
         .onTapGesture {
             isInputFocused = false
@@ -205,7 +191,7 @@ struct PaletteChatView: View {
                 textInputView
             case .qna(let data):
                 QnAInputView(qna: data, onSubmit: submitAnswer)
-                    .id("QnAInputView-\(forceUpdate)")
+                    .id("QnAInputView-\(forceUpdate)")  // forceUpdate를 사용하여 뷰를 강제로 갱신
             case .unknown:
                 Text("No QnA data available").foregroundColor(.red)
             }
@@ -353,12 +339,11 @@ struct PaletteChatView: View {
         }
     }
     
-    @MainActor
     private func handleLastMessage(_ msg: ChatMessageModel) {
         if msg.resource == .PROMPT {
             if let found = qna.first(where: { elem in elem.id == msg.promptId}) {
                 self.currentQnA = found
-                self.inputType = .qna(found)
+                inputType = .qna(found)
             }
         } else if msg.resource == .IMAGE {
             // 이미지 응답 후 UserInputView를 다시 띄우기
@@ -375,11 +360,15 @@ struct PaletteChatView: View {
                 answer: nil,
                 promptName: "이미지에 대한 추가 설명"
             )
-            self.inputType = .qna(newQnA)
+            DispatchQueue.main.async {
+                self.inputType = .qna(newQnA)
+                self.forceUpdate.toggle() // 강제 업데이트 트리거
+            }
         } else {
-            self.inputType = .text
+            DispatchQueue.main.async {
+                self.inputType = .text
+            }
         }
-        self.forceUpdate.toggle()
     }
     
     private func loadQnA() async {
@@ -426,7 +415,6 @@ struct PaletteChatView: View {
         }
     }
 }
-
 
 extension String {
     func heightWithConstrainedWidth(width: CGFloat, font: UIFont) -> CGFloat {
