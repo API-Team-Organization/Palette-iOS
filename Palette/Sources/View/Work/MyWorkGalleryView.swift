@@ -30,7 +30,7 @@ struct MyWorkGalleryView: View {
                                 options: ["이미지", "동영상"])
                 
                 if selectedTab == 0 {
-                    GridView(images: images, onImageTap: { image in
+                    StaggeredGridView(images: images, onImageTap: { image in
                         self.fullscreenImage = image
                         self.isFullScreenPresented = true
                     }, onSave: { imageUrl in
