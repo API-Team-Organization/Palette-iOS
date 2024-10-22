@@ -38,8 +38,9 @@ struct MessageBubble: View {
             if message.resource == .IMAGE {
                 KFImage(URL(string: message.message))
                     .resizable()
-                    .scaledToFit()
-                    .frame(maxWidth: 200, maxHeight: 200)
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxWidth: 240)
+                    .clipped()
                     .cornerRadius(13)
                     .onTapGesture {
                         if let image = self.image {
