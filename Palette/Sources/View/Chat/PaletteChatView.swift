@@ -172,20 +172,32 @@ struct PaletteChatView: View {
     private var queuePositionView: some View {
         Group {
             if let position = queuePosition {
-                if position > 0 {
-                    Text("앞에 있는 사용자 : \(position)")
-                        .font(.custom("SUIT-Bold", size: 18))
-                        .foregroundStyle(Color.black)
-                        .padding()
-                } else {
-                    Text("그리는 중...")
-                        .font(.custom("SUIT-Bold", size: 18))
-                        .foregroundStyle(Color.black)
-                        .padding()
+                HStack {
+                    if position > 0 {
+                        Text("앞에 있는 사용자 : ") +
+                        Text("\(position)")
+                            .foregroundColor(Color("AccentColor"))
+                    } else {
+                        Text("그리는 중...")
+                            .foregroundStyle(Color("AccentColor"))
+                    }
                 }
+                .font(.custom("SUIT-Bold", size: 18))
+                .foregroundColor(Color.black)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color("AccentColor"), lineWidth: 3)
+                )
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.white)
+                )
             }
         }
     }
+
 
     private var inputView: some View {
         Group {
