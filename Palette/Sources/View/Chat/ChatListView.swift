@@ -41,7 +41,7 @@ class ChatRoomViewModel: ObservableObject {
     
     @MainActor
     func setChatRooms(_ res: [ChatRoomModel]) {
-        self.chatRooms = res
+        self.chatRooms = res.reversed()
     }
 
     func deleteChatRoom(roomID: Int) async {
