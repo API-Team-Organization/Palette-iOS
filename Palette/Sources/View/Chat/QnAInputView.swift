@@ -23,6 +23,11 @@ struct QnAInputView: View {
     
     init(qna: QnAData, onSubmit: @escaping (AnswerDto) -> Void) {
         _viewModel = StateObject(wrappedValue: QnAInputViewModel(qna: qna, onSubmit: onSubmit))
+        
+        // Set the default selected choice to the first choice if available
+        if let firstChoiceId = qna.question.choices?.first?.id as String? {
+            _selectedChoice = State(initialValue: firstChoiceId)
+        }
     }
     
     var body: some View {
@@ -189,3 +194,4 @@ struct QnAInputView: View {
         isMessageValid = !userInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }
+
