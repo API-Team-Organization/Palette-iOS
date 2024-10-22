@@ -1,8 +1,17 @@
 import SwiftUI
 
-struct QnAInputView: View {
+class QnAInputViewModel: ObservableObject {
     let qna: QnAData
     let onSubmit: (AnswerDto) -> Void
+    
+    init(qna: QnAData, onSubmit: @escaping (AnswerDto) -> Void) {
+        self.qna = qna
+        self.onSubmit = onSubmit
+    }
+}
+
+struct QnAInputView: View {
+    @StateObject var viewModel: QnAInputViewModel
     
     @State private var selectedChoice: String?
     @State private var userInput: String = ""
@@ -12,9 +21,13 @@ struct QnAInputView: View {
     
     @FocusState private var isInputFocused: Bool
     
+    init(qna: QnAData, onSubmit: @escaping (AnswerDto) -> Void) {
+        _viewModel = StateObject(wrappedValue: QnAInputViewModel(qna: qna, onSubmit: onSubmit))
+    }
+    
     var body: some View {
         Group {
-            switch qna.type {
+            switch viewModel.qna.type {
             case .USER_INPUT:
                 userInputView
             case .SELECTABLE:
@@ -26,7 +39,7 @@ struct QnAInputView: View {
     }
     
     private var instructionText: String {
-        switch qna.type {
+        switch viewModel.qna.type {
         case .SELECTABLE:
             return "아래의 값중에 하나를 선택해주세요"
         case .USER_INPUT:
@@ -48,7 +61,7 @@ struct QnAInputView: View {
             .padding(.top, 20)
             
             Picker("선택", selection: $selectedChoice) {
-                ForEach(qna.question.choices ?? []) { choice in
+                ForEach(viewModel.qna.question.choices ?? []) { choice in
                     Text(choice.displayName).tag(choice.id as String?)
                 }
             }
@@ -73,7 +86,9 @@ struct QnAInputView: View {
                 .foregroundStyle(Color.black)
                 .padding(.bottom, 20)
             
-            if let xSize = qna.question.xSize, let ySize = qna.question.ySize, let maxCount = qna.question.maxCount {
+            if let xSize = viewModel.qna.question.xSize,
+               let ySize = viewModel.qna.question.ySize,
+               let maxCount = viewModel.qna.question.maxCount {
                 CoordinateGridBox(width: xSize, height: ySize, maxCount: maxCount, selectedNumbers: $selectedNumbers)
                     .frame(maxWidth: 300, maxHeight: 300)
             } else {
@@ -154,7 +169,7 @@ struct QnAInputView: View {
     
     private func submitAnswer() {
         let answer: AnswerDto
-        switch qna.type {
+        switch viewModel.qna.type {
         case .SELECTABLE:
             answer = AnswerDto(type: "SELECTABLE", choiceId: selectedChoice, input: nil, choice: nil)
         case .USER_INPUT:
@@ -162,7 +177,7 @@ struct QnAInputView: View {
         case .GRID:
             answer = AnswerDto(type: "GRID", choiceId: nil, input: nil, choice: Array(selectedNumbers))
         }
-        onSubmit(answer)
+        viewModel.onSubmit(answer)
     }
     
     private func updateTextEditorHeight() {

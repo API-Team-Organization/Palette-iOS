@@ -1,3 +1,6 @@
+// TODO :: 생성중... 이후 이미지 도착시 생성중이 풀리고 입력창이나 다른 컴포넌트가 뜨도록 수정.
+// TODO :: 뷰 재진입시 재생성 버튼 나오도록 수정 (좀카츠가 재생성 만들고 반영 ㅇㅇ)
+
 import SwiftUI
 import FlowKit
 
@@ -14,6 +17,10 @@ struct PaletteChatView: View {
     @State private var showingRoomTitleAlert = false
     @State private var isLoadingResponse = false
     @State private var isMessageValid = false
+    @State private var inputType: InputType = .text
+    @State private var currentQnA: QnAData?
+    @State private var queuePosition: Int?
+    @State private var forceUpdate: Bool = false  // 새로 추가된 상태 변수
     @Environment(\.presentationMode) var presentationMode
     let update_alert = Alert(title: Text("방 제목 설정 실패"),
                              message: Text("채팅방 제목 설정에 실패했습니다."),
@@ -29,8 +36,6 @@ struct PaletteChatView: View {
     @State private var isFullscreenPresented = false
     
     @FocusState private var isInputFocused: Bool
-    
-    @State private var inputType: InputType = .text
     
     enum InputType {
         case text
@@ -50,6 +55,7 @@ struct PaletteChatView: View {
         self.messages.append(message)
         print("new Chat! \(message)")
         handleLastMessage(message)
+        self.forceUpdate.toggle() // 강제 업데이트 트리거
     }
     
     var body: some View {
@@ -57,7 +63,11 @@ struct PaletteChatView: View {
             VStack {
                 headerView
                 chatListView
-                inputView
+                if let position = queuePosition, position >= 0 {
+                    queuePositionView
+                } else {
+                    inputView
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.white)
@@ -65,12 +75,16 @@ struct PaletteChatView: View {
             
             fullScreenImageView
         }
+        .onChange(of: websocket.queuePosition) { newValue in
+            print("Queue position changed in PaletteChatView: \(String(describing: newValue))")
+            self.queuePosition = newValue
+        }
         .onTapGesture {
             isInputFocused = false
         }
         .onAppear(perform: handleOnAppear)
         .onDisappear {
-            websocket.close()  // 뷰가 사라질 때 WebSocket 연결 종료
+            websocket.close()
         }
         .alert("채팅방 이름 입력", isPresented: $showingRoomTitleAlert, actions: {
             TextField("채팅방 이름", text: $roomTitle)
@@ -155,14 +169,35 @@ struct PaletteChatView: View {
         }
     }
     
+    private var queuePositionView: some View {
+        Group {
+            if let position = queuePosition {
+                if position > 0 {
+                    Text("앞에 있는 사용자 : \(position)")
+                        .font(.custom("SUIT-Bold", size: 18))
+                        .foregroundStyle(Color.black)
+                        .padding()
+                } else {
+                    Text("그리는 중...")
+                        .font(.custom("SUIT-Bold", size: 18))
+                        .foregroundStyle(Color.black)
+                        .padding()
+                }
+            }
+        }
+    }
+
     private var inputView: some View {
-        return switch inputType {
-        case .text:
-            AnyView(textInputView)
-        case .qna(let data):
-            AnyView(QnAInputView(qna: data, onSubmit: submitAnswer))
-        case .unknown:
-            AnyView(Text("No QnA data available").foregroundColor(.red))
+        Group {
+            switch inputType {
+            case .text:
+                textInputView
+            case .qna(let data):
+                QnAInputView(qna: data, onSubmit: submitAnswer)
+                    .id("QnAInputView-\(forceUpdate)")  // forceUpdate를 사용하여 뷰를 강제로 갱신
+            case .unknown:
+                Text("No QnA data available").foregroundColor(.red)
+            }
         }
     }
     
@@ -310,7 +345,31 @@ struct PaletteChatView: View {
     private func handleLastMessage(_ msg: ChatMessageModel) {
         if msg.resource == .PROMPT {
             if let found = qna.first(where: { elem in elem.id == msg.promptId}) {
+                self.currentQnA = found
                 inputType = .qna(found)
+            }
+        } else if msg.resource == .IMAGE {
+            // 이미지 응답 후 UserInputView를 다시 띄우기
+            let newQnA = QnAData(
+                id: "userInput",
+                type: .USER_INPUT,
+                question: QuestionDto(
+                    type: "TEXT",
+                    choices: nil,
+                    xSize: nil,
+                    ySize: nil,
+                    maxCount: nil
+                ),
+                answer: nil,
+                promptName: "이미지에 대한 추가 설명"
+            )
+            DispatchQueue.main.async {
+                self.inputType = .qna(newQnA)
+                self.forceUpdate.toggle() // 강제 업데이트 트리거
+            }
+        } else {
+            DispatchQueue.main.async {
+                self.inputType = .text
             }
         }
     }
@@ -360,10 +419,10 @@ struct PaletteChatView: View {
     }
 }
 
-    extension String {
-        func heightWithConstrainedWidth(width: CGFloat, font: UIFont) -> CGFloat {
-            let constraintRect = CGSize(width: width, height: .greatestFiniteMagnitude)
-            let boundingBox = self.boundingRect(with: constraintRect, options: .usesLineFragmentOrigin, attributes: [NSAttributedString.Key.font: font], context: nil)
-            return ceil(boundingBox.height)
-        }
+extension String {
+    func heightWithConstrainedWidth(width: CGFloat, font: UIFont) -> CGFloat {
+        let constraintRect = CGSize(width: width, height: .greatestFiniteMagnitude)
+        let boundingBox = self.boundingRect(with: constraintRect, options: .usesLineFragmentOrigin, attributes: [NSAttributedString.Key.font: font], context: nil)
+        return ceil(boundingBox.height)
     }
+}
