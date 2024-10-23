@@ -17,7 +17,7 @@ struct PaletteChatView: View {
     @State private var showingRoomTitleAlert = false
     @State private var isLoadingResponse = false
     @State private var isMessageValid = false
-    @State private var inputType: InputType = .text
+    @State private var inputType: InputType = .none
     @State private var currentQnA: QnAData?
     @State private var queuePosition: Int?
     @State private var forceUpdate: Bool = false  // 새로 추가된 상태 변수
@@ -38,9 +38,9 @@ struct PaletteChatView: View {
     @FocusState private var isInputFocused: Bool
     
     enum InputType {
-        case text
+        case none
         case qna(QnAData)
-        case unknown
+        case fulfilled // 생성 다됐을때
     }
     
     init(roomTitleprop: String?, roomID: Int, isNewRoom: Bool) {
@@ -55,6 +55,16 @@ struct PaletteChatView: View {
         self.messages.append(message)
         print("new Chat! \(message)")
         handleLastMessage(message)
+        self.forceUpdate.toggle() // 강제 업데이트 트리거
+    }
+    
+    @MainActor
+    private func modifyQueue(_ message: GenerateStatusMessage) {
+        self.queuePosition = if message.generating {
+            message.position
+        } else {
+            nil
+        }
         self.forceUpdate.toggle() // 강제 업데이트 트리거
     }
     
@@ -74,10 +84,6 @@ struct PaletteChatView: View {
             .navigationBarHidden(true)
             
             fullScreenImageView
-        }
-        .onChange(of: websocket.queuePosition) { newValue in
-            print("Queue position changed in PaletteChatView: \(String(describing: newValue))")
-            self.queuePosition = newValue
         }
         .onTapGesture {
             isInputFocused = false
@@ -202,15 +208,34 @@ struct PaletteChatView: View {
     private var inputView: some View {
         Group {
             switch inputType {
-            case .text:
-                textInputView
+            case .none:
+                EmptyView()
             case .qna(let data):
                 QnAInputView(qna: data, onSubmit: submitAnswer)
                     .id("QnAInputView-\(forceUpdate)")  // forceUpdate를 사용하여 뷰를 강제로 갱신
-            case .unknown:
-                Text("No QnA data available").foregroundColor(.red)
+            case .fulfilled:
+                regenButton
+            
+//                EmptyView() // 이거 그 뭐시냐 그거로 바꿔...그... 재생성... ㅇㅇ
             }
         }
+    }
+    
+    private var regenButton: some View {
+        Button(action: {
+            Task {
+                await PaletteNetworking.post("/room/\(roomID)/regen", res: EmptyResModel.self)
+            }
+        }) {
+            Text("다시 생성하기")
+                .font(.system(size: 17, weight: .medium))
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(Color(red: 0.34, green: 0.44, blue: 0.98)) // 밝은 파란색
+                .cornerRadius(8)
+        }
+        .padding(.horizontal)
     }
     
     private var textInputView: some View {
@@ -272,6 +297,7 @@ struct PaletteChatView: View {
     
     private func handleOnAppear() {
         websocket.setMessageCallback(onMessage: self.addChat)
+        websocket.setQueueCallback(onQueue: self.modifyQueue)
         if isNewRoom {
             showingRoomTitleAlert = true
         } else {
@@ -360,29 +386,8 @@ struct PaletteChatView: View {
                 self.currentQnA = found
                 inputType = .qna(found)
             }
-        } else if msg.resource == .IMAGE {
-            // 이미지 응답 후 UserInputView를 다시 띄우기
-            let newQnA = QnAData(
-                id: "userInput",
-                type: .USER_INPUT,
-                question: QuestionDto(
-                    type: "TEXT",
-                    choices: nil,
-                    xSize: nil,
-                    ySize: nil,
-                    maxCount: nil
-                ),
-                answer: nil,
-                promptName: "이미지에 대한 추가 설명"
-            )
-            DispatchQueue.main.async {
-                self.inputType = .qna(newQnA)
-                self.forceUpdate.toggle() // 강제 업데이트 트리거
-            }
         } else {
-            DispatchQueue.main.async {
-                self.inputType = .text
-            }
+            self.inputType = if msg.regenScope { .fulfilled } else { .none }
         }
     }
     
@@ -390,8 +395,14 @@ struct PaletteChatView: View {
         let result = await PaletteNetworking.get("/room/\(roomID)/qna", res: DataResModel<[QnAData]>.self)
         switch result {
         case .success(let response):
+            
             DispatchQueue.main.async {
                 self.qna = response.data
+                
+                let filtered = self.qna.filter { $0.answer == nil }
+                if filtered.isEmpty {
+                    self.inputType = .fulfilled
+                }
             }
         case .failure(let error):
             print("QNA thrown error: \(error.localizedDescription)")
@@ -423,7 +434,7 @@ struct PaletteChatView: View {
             switch res {
             case .success(let data):
                 print("res! \(data.message)")
-                self.inputType = .text // reset?
+                self.inputType = .none // wait for new chat handling ;.;
             case .failure(let error):
                 print("Error submitting answer: \(error)")
             }

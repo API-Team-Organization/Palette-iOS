@@ -89,6 +89,27 @@ struct MessageBubble: View {
         .cornerRadius(13)
     }
     
+//    private var regenerateButton: some View {
+//        if isRegenerateButtonVisible {
+//            Button(action: {
+//                debugPrint("Hi")
+//            }) {
+//                Text("홍보물 재생성하기")
+//                    .font(.custom("SUIT-Bold", size: 16)) // 버튼 텍스트 크기
+//                    .foregroundColor(.white)
+//                    .padding(.vertical, 12) // 세로 패딩 설정
+//                    .padding(.horizontal, 24) // 가로 패딩 설정
+//                    .background(Color("AccentColor"))
+//                    .cornerRadius(10) // 버튼의 cornerRadius
+//            }
+//            .frame(maxWidth: .infinity, alignment: .center) // 버튼을 부모의 너비에 맞추어 중앙 정렬
+//            .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2) // 약간의 그림자 효과 추가
+//        }
+//        else {
+//            EmptyView()
+//        }
+//    }
+    
     private var timeText: some View {
         Text(formattedTime)
             .font(.custom("SUIT-Regular", size: 11))

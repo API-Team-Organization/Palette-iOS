@@ -8,6 +8,7 @@ struct ChatMessageModel: Codable, Identifiable, Equatable {
     let roomId: Int
     let userId: Int
     let promptId: String?
+    let regenScope: Bool
     let isAi: Bool
     
     enum ResourceType: String, Codable {
@@ -17,7 +18,7 @@ struct ChatMessageModel: Codable, Identifiable, Equatable {
     }
     
     enum CodingKeys: String, CodingKey {
-        case id, message, resource, datetime, roomId, userId, isAi, promptId
+        case id, message, resource, datetime, roomId, userId, isAi, regenScope, promptId
     }
 
     var date: Date {

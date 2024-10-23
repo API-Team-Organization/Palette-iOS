@@ -2,10 +2,10 @@ import Foundation
 import Combine
 
 class Websocket: ObservableObject {
-    @Published var queuePosition: Int?
     private var webSocketTask: URLSessionWebSocketTask?
     private let roomID: Int
     private var onMessage: ((ChatMessageModel) -> ())?
+    private var onQueue: ((GenerateStatusMessage) -> ())?
     private var pingTimer: Timer?
     private var isClosed = false
     
@@ -20,6 +20,10 @@ class Websocket: ObservableObject {
     
     func setMessageCallback(onMessage: @escaping (ChatMessageModel) -> ()) {
         self.onMessage = onMessage
+    }
+    
+    func setQueueCallback(onQueue: @escaping (GenerateStatusMessage) -> ()) {
+        self.onQueue = onQueue
     }
     
     private func connect() {
@@ -79,10 +83,10 @@ class Websocket: ObservableObject {
                             case .ERROR:
                                 let response = try JSONDecoder().decode(WebSocketFailResponseData.self, from: data)
                                 print("WebSocket 오류: \(response.message ?? "알 수 없는 오류")")
-                            case .QUEUE_POSITION_UPDATE:
-                                let response = try JSONDecoder().decode(QueuePositionMessage.self, from: data)
+                            case .GENERATE_STATUS:
+                                let response = try JSONDecoder().decode(GenerateStatusMessage.self, from: data)
                                 DispatchQueue.main.async {
-                                    self.queuePosition = response.position
+                                    self.onQueue?(response)
                                     print("Queue position updated: \(response.position)")
                                 }
                             }
@@ -162,11 +166,12 @@ enum ResourceType: String, Codable {
 enum MessageType: String, Codable {
     case ERROR
     case NEW_CHAT
-    case QUEUE_POSITION_UPDATE
+    case GENERATE_STATUS
 }
 
-struct QueuePositionMessage: Codable {
+struct GenerateStatusMessage: Codable {
     let position: Int
+    let generating: Bool
 }
 
 struct WebSocketFailResponseData: Codable {
