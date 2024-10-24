@@ -25,7 +25,7 @@ struct MainView: View {
             }
             
             VStack {
-                ForEach(0..<86) { _ in
+                ForEach(0..<83) { _ in
                     Spacer()
                 }
                 if !isFullScreenImagePresented {
