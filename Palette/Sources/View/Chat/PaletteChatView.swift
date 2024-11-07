@@ -20,11 +20,14 @@ struct PaletteChatView: View {
     @State private var inputType: InputType = .none
     @State private var currentQnA: QnAData?
     @State private var queuePosition: Int?
-    @State private var forceUpdate: Bool = false  // 새로 추가된 상태 변수
+    @State private var forceUpdate: Bool = false
+    
     @Environment(\.presentationMode) var presentationMode
+    
     let update_alert = Alert(title: Text("방 제목 설정 실패"),
                              message: Text("채팅방 제목 설정에 실패했습니다."),
                              dismissButton: .default(Text("확인")))
+    
     let chatblank_alert = Alert(title: Text("메시지 전송 실패"),
                                 message: Text("메시지 내용을 입력해주세요."),
                                 dismissButton: .default(Text("확인")))
@@ -55,7 +58,7 @@ struct PaletteChatView: View {
         self.messages.append(message)
         print("new Chat! \(message)")
         handleLastMessage(message)
-        self.forceUpdate.toggle() // 강제 업데이트 트리거
+        self.forceUpdate.toggle() // 강제 업데이트
     }
     
     @MainActor
@@ -65,7 +68,7 @@ struct PaletteChatView: View {
         } else {
             nil
         }
-        self.forceUpdate.toggle() // 강제 업데이트 트리거
+        self.forceUpdate.toggle() // 강제 업데이트
     }
     
     var body: some View {
