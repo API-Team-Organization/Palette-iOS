@@ -89,6 +89,37 @@ struct StaggeredGridView: View {
                     Text("갤러리에 저장하기")
                     Image(systemName: "square.and.arrow.down")
                 }
+                Button(action: {
+                    if let url = URL(string: imageUrl) {
+                        KingfisherManager.shared.retrieveImage(with: url) { result in
+                            switch result {
+                            case .success(let value):
+                                let image = value.image
+                                let activityViewController = UIActivityViewController(
+                                    activityItems: [image],
+                                    applicationActivities: nil
+                                )
+                                
+                                // Optional: Exclude certain activity types
+                                activityViewController.excludedActivityTypes = [
+                                    .addToReadingList,
+                                    .assignToContact,
+                                    .print
+                                ]
+                                
+                                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                                   let rootViewController = windowScene.windows.first?.rootViewController {
+                                    rootViewController.present(activityViewController, animated: true, completion: nil)
+                                }
+                            case .failure(let error):
+                                print("Image download failed: \(error)")
+                            }
+                        }
+                    }
+                }) {
+                    Text("이미지 공유하기")
+                    Image(systemName: "square.and.arrow.up")
+                }
             }
     }
 }

@@ -69,7 +69,31 @@ struct MessageBubble: View {
                             Text("갤러리에 저장하기")
                             Image(systemName: "square.and.arrow.down")
                         }
+                        Button(action: {
+                            if let image = self.image {
+                                let activityViewController = UIActivityViewController(
+                                    activityItems: [image],
+                                    applicationActivities: nil
+                                )
+                                
+                                // Optional: Exclude certain activity types
+                                activityViewController.excludedActivityTypes = [
+                                    .addToReadingList,
+                                    .assignToContact,
+                                    .print
+                                ]
+                                
+                                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                                   let rootViewController = windowScene.windows.first?.rootViewController {
+                                    rootViewController.present(activityViewController, animated: true, completion: nil)
+                                }
+                            }
+                        }) {
+                            Text("이미지 공유하기")
+                            Image(systemName: "square.and.arrow.up")
+                        }
                     }
+                
             } else {
                 Text(message.message)
                     .font(.custom("SUIT-Medium", size: 14))
