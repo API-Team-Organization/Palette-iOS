@@ -1,5 +1,5 @@
 # 🎨 Palette-iOS
-palette's iOS App Repo.
+Palette's iOS App Repo (Powered By Tuist)
 ---
 1. When Start This Project, Use This Tuist Command (Just ignore some !!warning!!)
 
